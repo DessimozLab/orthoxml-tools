@@ -1,0 +1,14 @@
+[project]
+name = "orthoxml"
+version = "0.1.0"
+description = "Tools for working with OrthoXML files."
+readme = "README.md"
+authors = [
+    { name = "Ali Yazdizadeh", email = "aliyzd1379@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
