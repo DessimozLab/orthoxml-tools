@@ -9,6 +9,12 @@ class OrthoXMLTree:
         self.groups = groups
         self.xml_tree = xml_tree
 
+    def __repr__(self):
+        return f"<OrthoXMLTree: {len(self.species)} species, {len(self.groups)} groups>"
+    
+    def __str__(self):
+        return f"OrthoXMLTree: {len(self.species)} species, {len(self.groups)} groups"
+    
     @classmethod
     def from_file(cls, filepath):
         """
