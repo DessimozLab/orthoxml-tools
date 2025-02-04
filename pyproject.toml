@@ -14,3 +14,11 @@ dependencies = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src/orthoxml/schemas/*.xsd",
+]
+
+[tool.hatch.build.sources]
+orthoxml = "src/orthoxml"
