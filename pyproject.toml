@@ -7,7 +7,9 @@ authors = [
     { name = "Ali Yazdizadeh", email = "aliyzd1379@gmail.com" }
 ]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "lxml>=5.3.0",
+]
 
 [build-system]
 requires = ["hatchling"]
