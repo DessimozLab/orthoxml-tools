@@ -22,3 +22,6 @@ include = [
 
 [tool.hatch.build.sources]
 orthoxml = "src/orthoxml"
+
+[tool.hatch.build.targets.wheel]
+packages = ["orthoxml"]
