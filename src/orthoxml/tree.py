@@ -30,7 +30,7 @@ class OrthoXMLTree:
     def from_file(
         cls, 
         filepath: str, 
-        orthoxml_version: str = None
+        validate: bool = False,
     ) -> "OrthoXMLTree":
         """
         Create an OrthoXMLTree instance from an OrthoXML file.
@@ -47,10 +47,10 @@ class OrthoXMLTree:
         """
         try:
             # Load XML document and validate against schema
-            xml_tree = load_orthoxml_file(filepath, orthoxml_version)
+            xml_tree = load_orthoxml_file(filepath, validate)
             
             # Parse XML elements into domain models
-            genes, species, groups = parse_orthoxml(xml_tree)
+            genes, species, groups, orthoxml_version = parse_orthoxml(xml_tree)
 
             return cls(
                 genes=genes,

@@ -7,7 +7,7 @@ import os
 
 logger = get_logger(__name__)
 
-def load_orthoxml_file(filepath: str, orthoxml_version: str = None) -> etree.ElementTree:
+def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTree:
     """
     Load an OrthoXML file from disk.
     
@@ -22,7 +22,9 @@ def load_orthoxml_file(filepath: str, orthoxml_version: str = None) -> etree.Ele
     except Exception as e:
         raise OrthoXMLParsingError(f"Failed to load OrthoXML file: {e}")
 
-    if orthoxml_version:
+    if validate:
+        orthoxml_version = tree.getroot().attrib.get('version')
+        
         if not validate_xml(tree, orthoxml_version):
             raise OrthoXMLParsingError(f"OrthoXML file is not valid for version {orthoxml_version}")
         else:
@@ -52,10 +54,12 @@ def parse_orthoxml(xml_tree) -> tuple:
     Parse an OrthoXML document into genes, species, and groups.
 
     :param xml_tree: An instance of the XML tree.
-    :return: A tuple of genes, species and groups.
+    :return: A tuple of genes, species, groups, and the OrthoXML version.
     """
+    orthoxml_version = xml_tree.getroot().attrib.get('version')
+    
     genes = []
     species = []
     groups = []
 
-    return genes, species, groups
+    return genes, species, groups, orthoxml_version
