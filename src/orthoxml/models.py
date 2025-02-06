@@ -5,7 +5,7 @@ from lxml import etree
 ORTHO_NS = "http://orthoXML.org/2011/"
 NSMAP = {None: ORTHO_NS}
 
-    
+
 class Species:
     __slots__ = ["name", "NCBITaxId", "genes"]
     def __init__(self, name, NCBITaxId, genes=None):
@@ -41,26 +41,25 @@ class Species:
         return species_el
 
 class Gene:
-    __slots__ = ["gene_id", "gene_name", "species"]
-    def __init__(self, gene_id: str, gene_name: str, species: Species):
-        self.gene_id = gene_id
-        self.gene_name = gene_name
-        self.species = species
+    __slots__ = ["_id", "geneId"]
+    def __init__(self, _id: str, geneId: str):
+        self._id = _id
+        self.geneId = geneId
 
     def __repr__(self):
-        return f"Gene(id={self.id}, geneId={self.geneId})"
+        return f"Gene(id={self._id}, geneId={self.geneId})"
     
     @classmethod
     def from_xml(cls, xml_element):
         # xml_element is a <gene> element.
         return cls(
-            id=xml_element.get("id"),
+            _id=xml_element.get("id"),
             geneId=xml_element.get("geneId")
         )
 
     def to_xml(self):
         gene_el = etree.Element(f"{{{ORTHO_NS}}}gene")
-        gene_el.set("id", self.id)
+        gene_el.set("id", self._id)
         gene_el.set("geneId", self.geneId)
         return gene_el
 

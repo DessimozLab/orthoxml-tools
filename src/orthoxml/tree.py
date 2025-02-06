@@ -3,29 +3,28 @@
 from .loaders import load_orthoxml_file, parse_orthoxml
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
-from .models import Gene, Species, OrthologyGroup
+from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
 
 class OrthoXMLTree:
     def __init__(
         self,
-        genes: dict[str, Gene],
-        species: dict[str, Species],
-        groups: list[OrthologyGroup],
+        genes: list[Gene],
+        species: list[Species],
+        groups: list[OrthologGroup|ParalogGroup],
+        taxonomy: Taxon,
         xml_tree: etree.ElementTree,
         orthoxml_version: str = None
     ):
         self.genes = genes
         self.species = species
         self.groups = groups
+        self.taxonomy = taxonomy
         self.xml_tree = xml_tree
         self.orthoxml_version = orthoxml_version
 
     def __repr__(self):
-        return f"<OrthoXMLTree: {len(self.genes)} genes, {len(self.species)} species, {len(self.groups)} groups>"
-    
-    def __str__(self):
-        return f"OrthoXMLTree: {len(self.genes)} genes, {len(self.species)} species, {len(self.groups)} groups"
-    
+        return f"OrthoXMLTree(genes={self.genes}, species={self.species}, groups={self.groups}), taxonomy={self.taxonomy}, orthoxml_version={self.orthoxml_version}"
+        
     @classmethod
     def from_file(
         cls, 
@@ -50,12 +49,19 @@ class OrthoXMLTree:
             xml_tree = load_orthoxml_file(filepath, validate)
             
             # Parse XML elements into domain models
-            genes, species, groups, orthoxml_version = parse_orthoxml(xml_tree)
+            species_list, taxonomy, groups, orthoxml_version = parse_orthoxml(xml_tree)
+
+            # TODO: Parse genes one time and avoid duplicate representations
+            genes = []
+            for species in species_list:
+                for gene in species.genes:
+                    genes.append(gene)
 
             return cls(
                 genes=genes,
-                species=species,
+                species=species_list,
                 groups=groups,
+                taxonomy=taxonomy,
                 xml_tree=xml_tree,
                 orthoxml_version=orthoxml_version
             )

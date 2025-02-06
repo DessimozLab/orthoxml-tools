@@ -1,9 +1,12 @@
 # loaders.py
+import os
 from importlib import resources
+
 from lxml import etree
 from .exceptions import OrthoXMLParsingError
+from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon, ORTHO_NS
 from .logger import get_logger
-import os
+
 
 logger = get_logger(__name__)
 
@@ -54,12 +57,30 @@ def parse_orthoxml(xml_tree) -> tuple:
     Parse an OrthoXML document into genes, species, and groups.
 
     :param xml_tree: An instance of the XML tree.
-    :return: A tuple of genes, species, groups, and the OrthoXML version.
-    """
-    orthoxml_version = xml_tree.getroot().attrib.get('version')
-    
-    genes = []
-    species = []
-    groups = []
+    :return: A tuple of species_list, taxonomy, groups, and the OrthoXML version.
+    """    
+    root = xml_tree.getroot()
+    orthoxml_version = root.get("version", None)
 
-    return genes, species, groups, orthoxml_version
+    # Parse species.
+    species_list = []
+    for sp_el in root.xpath("ortho:species", namespaces={"ortho": ORTHO_NS}):
+        species_list.append(Species.from_xml(sp_el))
+
+    # Parse taxonomy if present.
+    taxonomy = None
+    taxonomy_el = root.find(f"{{{ORTHO_NS}}}taxonomy")
+    if taxonomy_el is not None:
+        taxon_el = taxonomy_el.find(f"{{{ORTHO_NS}}}taxon")
+        if taxon_el is not None:
+            taxonomy = Taxon.from_xml(taxon_el)
+
+    # Parse groups.
+    groups = None
+    groups_el = root.find(f"{{{ORTHO_NS}}}groups")
+    if groups_el is not None:
+        ortholog_group_el = groups_el.find(f"{{{ORTHO_NS}}}orthologGroup")
+        if ortholog_group_el is not None:
+            groups = OrthologGroup.from_xml(ortholog_group_el)
+
+    return species_list, taxonomy, groups, orthoxml_version
