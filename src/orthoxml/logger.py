@@ -9,7 +9,8 @@ logger.setLevel(logging.DEBUG)
 
 # Create formatters
 console_formatter = logging.Formatter(
-    '%(levelname)s - %(message)s'
+    fmt='%(asctime)s - %(module)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 # Console handler
