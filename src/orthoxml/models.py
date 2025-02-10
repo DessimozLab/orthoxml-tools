@@ -96,6 +96,41 @@ class Taxon:
             taxon_el.append(child.to_xml())
         return taxon_el
 
+    def to_str(self):
+        """
+        Returns a string representation of the taxonomy tree in a hierarchical format.
+        Example output:
+        
+        LUCA
+        ├── Archaea
+        │   ├── KORCO
+        │   ├── Euryarchaeota
+        │   │   ├── HALSA
+        │   │   └── THEKO
+        │   └── NITMS
+        ├── Bacteria
+        │   └── ... (and so on)
+        """
+        def _child_str(node, prefix, is_last):
+            # Determine the branch marker.
+            branch = "└── " if is_last else "├── "
+            # Build the line for this node.
+            line = prefix + branch + node.name
+            lines = [line]
+            # Update the prefix for the children.
+            new_prefix = prefix + ("    " if is_last else "│   ")
+            for i, child in enumerate(node.children):
+                # Check if this child is the last one.
+                is_child_last = (i == len(node.children) - 1)
+                lines.append(_child_str(child, new_prefix, is_child_last))
+            return "\n".join(lines)
+
+        # Start with the root node (printed without any branch symbol).
+        lines = [self.name]
+        # Process each child of the root.
+        for i, child in enumerate(self.children):
+            lines.append(_child_str(child, "", i == len(self.children) - 1))
+        return "\n".join(lines)
 
 class ParalogGroup:
     __slots__ = ["taxonId", "geneRefs", "orthologGroups", "paralogGroups"]
