@@ -80,7 +80,10 @@ def parse_orthoxml(xml_tree) -> tuple:
     groups_el = root.find(f"{{{ORTHO_NS}}}groups")
     if groups_el is not None:
         ortholog_group_el = groups_el.find(f"{{{ORTHO_NS}}}orthologGroup")
+        paralog_group_el = groups_el.find(f"{{{ORTHO_NS}}}paralogGroup")
         if ortholog_group_el is not None:
             groups = OrthologGroup.from_xml(ortholog_group_el)
+        elif paralog_group_el is not None:
+            groups = ParalogGroup.from_xml(paralog_group_el)
 
     return species_list, taxonomy, groups, orthoxml_version

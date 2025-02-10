@@ -94,39 +94,59 @@ class Taxon:
 
 
 class ParalogGroup:
-    __slots__ = ["geneRefs"]
-    def __init__(self, geneRefs=None):
-        self.geneRefs = geneRefs or []  # list of gene id strings
+    __slots__ = ["taxonId", "geneRefs", "orthologGroups", "paralogGroups"]
+    def __init__(self, taxonId=None, geneRefs=None, orthologGroups=None, paralogGroups=None):
+        self.taxonId = taxonId  # optional attribute (as string)
+        self.geneRefs = geneRefs or []        # list of gene id strings
+        self.orthologGroups = orthologGroups or []      # list of OrthologGroup objects
+        self.paralogGroups = paralogGroups or []  # list of ParalogGroup objects  
 
     def __repr__(self):
-        return f"ParalogGroup(geneRefs={self.geneRefs})"
-
+        return f"ParalogGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})"
+    
     @classmethod
     def from_xml(cls, xml_element):
         # xml_element is a <paralogGroup> element.
+        taxonId = xml_element.get("taxonId")
         geneRefs = []
-        for gene_ref in xml_element.xpath("./ortho:geneRef", namespaces={"ortho": ORTHO_NS}):
-            geneRefs.append(gene_ref.get("id"))
-        return cls(geneRefs)
-
+        subgroups = []
+        paralogGroups = []
+        # Process child elements.
+        for child in xml_element:
+            tag = etree.QName(child.tag).localname
+            if tag == "geneRef":
+                geneRefs.append(child.get("id"))
+            elif tag == "orthologGroup":
+                subgroups.append(OrthologGroup.from_xml(child))
+            elif tag == "paralogGroup":
+                paralogGroups.append(ParalogGroup.from_xml(child))
+        return cls(taxonId, geneRefs, subgroups, paralogGroups)
+    
     def to_xml(self):
-        paralog_el = etree.Element(f"{{{ORTHO_NS}}}paralogGroup")
+        group_el = etree.Element(f"{{{ORTHO_NS}}}paralogGroup")
+        if self.taxonId:
+            group_el.set("taxonId", self.taxonId)
+        # Note: If order matters you may want to store children in a single list.
+        for subgroup in self.subgroups:
+            group_el.append(subgroup.to_xml())
+        for paralog in self.paralogGroups:
+            group_el.append(paralog.to_xml())
         for geneRef in self.geneRefs:
-            gene_ref_el = etree.SubElement(paralog_el, f"{{{ORTHO_NS}}}geneRef")
+            gene_ref_el = etree.SubElement(group_el, f"{{{ORTHO_NS}}}geneRef")
             gene_ref_el.set("id", geneRef)
-        return paralog_el
+        return group_el
 
 
 class OrthologGroup:
-    __slots__ = ["taxonId", "geneRefs", "subgroups", "paralogGroups"]
-    def __init__(self, taxonId=None, geneRefs=None, subgroups=None, paralogGroups=None):
+    __slots__ = ["taxonId", "geneRefs", "orthologGroups", "paralogGroups"]
+    def __init__(self, taxonId=None, geneRefs=None, orthologGroups=None, paralogGroups=None):
         self.taxonId = taxonId  # optional attribute (as string)
         self.geneRefs = geneRefs or []        # list of gene id strings
-        self.subgroups = subgroups or []      # list of OrthologGroup objects
+        self.orthologGroups = orthologGroups or []      # list of OrthologGroup objects
         self.paralogGroups = paralogGroups or []  # list of ParalogGroup objects
 
     def __repr__(self):
-        return f"OrthologGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, subgroups={self.subgroups}, paralogGroups={self.paralogGroups})"
+        return f"OrthologGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})"
 
     @classmethod
     def from_xml(cls, xml_element):
