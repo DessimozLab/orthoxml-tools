@@ -22,9 +22,12 @@ class OrthoXMLTree:
         self.xml_tree = xml_tree
         self.orthoxml_version = orthoxml_version
 
-    def __repr__(self):
-        return f"OrthoXMLTree(genes={self.genes}, species={self.species}, groups={self.groups}), taxonomy={self.taxonomy}, orthoxml_version={self.orthoxml_version}"
+    def debug_repr(self):
+        return f"OrthoXMLTree(genes={self.genes}, species={self.species}, groups={self.groups}, taxonomy={self.taxonomy}, orthoxml_version={self.orthoxml_version})"
         
+    def __repr__(self):
+        return f"OrthoXMLTree(genes=[{len(self.genes)} genes], species=[{len(self.species)} species], groups=[{len(self.groups)} groups], taxonomy=[{len(self.taxonomy)} taxons], orthoxml_version={self.orthoxml_version})"
+    
     @classmethod
     def from_file(
         cls, 

@@ -73,6 +73,10 @@ class Taxon:
     def __repr__(self):
         return f"Taxon(id={self.id}, name={self.name}, children={self.children})"
 
+    def __len__(self):
+        # TODO
+        return 0
+    
     @classmethod
     def from_xml(cls, xml_element):
         # xml_element is a <taxon> element.
@@ -103,6 +107,10 @@ class ParalogGroup:
 
     def __repr__(self):
         return f"ParalogGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})"
+    
+    def __len__(self):
+        # TODO
+        return 0
     
     @classmethod
     def from_xml(cls, xml_element):
@@ -148,6 +156,10 @@ class OrthologGroup:
     def __repr__(self):
         return f"OrthologGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})"
 
+    def __len__(self):
+        # TODO
+        return 0
+    
     @classmethod
     def from_xml(cls, xml_element):
         # xml_element is an <orthologGroup> element.
