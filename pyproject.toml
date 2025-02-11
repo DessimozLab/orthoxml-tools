@@ -1,6 +1,6 @@
 [project]
 name = "orthoxml"
-version = "0.1.8"
+version = "0.1.9"
 description = "Tools for working with OrthoXML files."
 readme = "README.md"
 authors = [
