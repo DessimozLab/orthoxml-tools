@@ -23,16 +23,16 @@ pip install orthoxml
 OrthoXMLTree(genes=[5 genes], species=[3 species], groups=[0 groups], taxonomy=[0 taxons], orthoxml_version=0.5)
 ```
 
-Accessing Specific Data
+### Accessing Specific Data
 
-*   Groups
+*   **Groups**
 
 ```python
 >>> otree.groups
 OrthologGroup(taxonId=5, geneRefs=['5'], orthologGroups=[OrthologGroup(taxonId=4, geneRefs=['4'], orthologGroups=[], paralogGroups=[ParalogGroup(taxonId=None, geneRefs=['1', '2', '3'], orthologGroups=[], paralogGroups=[])])], paralogGroups=[])
 ```
 
-*   Genes
+*   **Genes**
 
 ```python
 >>> otree.genes
@@ -43,7 +43,7 @@ OrthologGroup(taxonId=5, geneRefs=['5'], orthologGroups=[OrthologGroup(taxonId=4
  Gene(id=5, geneId=mmu1)]
 ```
 
-*   Taxonomy
+*   **Taxonomy**
 
 ```python
 >>> otree.taxonomy
@@ -61,7 +61,7 @@ Root
     └── Pan troglodytes
 ```
 
-*   Species
+*   **Species**
 
 ```python
 >>> otree.species
