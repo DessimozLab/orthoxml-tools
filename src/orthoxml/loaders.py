@@ -37,6 +37,12 @@ def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTr
         return tree
 
 def validate_xml(xml_tree, orthoxml_version):
+    """
+    Validate an OrthoXML document against the scheme.
+    
+    :param xml_tree: An instance of the XML tree.
+    :param orthoxml_version: The OrthoXML version.
+    """
     try:
         # Load XSD schema from package resources
         with resources.files('orthoxml.schemas').joinpath(f'orthoxml-{orthoxml_version}.xsd').open('rb') as schema_file:
