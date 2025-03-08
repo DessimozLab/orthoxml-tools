@@ -1,6 +1,7 @@
 # loaders.py
 import os
 from importlib import resources
+from typing import Union
 
 from lxml import etree
 from .exceptions import OrthoXMLParsingError
@@ -58,7 +59,7 @@ def validate_xml(xml_tree, orthoxml_version):
     except Exception as e:
         logger.error(f"Error: {e}")
 
-def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[OrthologGroup|ParalogGroup|Gene], str]:
+def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[Union[OrthologGroup, ParalogGroup, Gene]], str]:
     """
     Parse an OrthoXML document into genes, species, and groups.
 

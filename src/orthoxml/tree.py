@@ -1,6 +1,7 @@
 # tree.py
 
 from collections import defaultdict
+from typing import Union
 from .loaders import load_orthoxml_file, parse_orthoxml
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
@@ -12,7 +13,7 @@ class OrthoXMLTree:
         self,
         genes: dict[str, Gene],
         species: list[Species],
-        groups: list[OrthologGroup|ParalogGroup|Gene],
+        groups: list[Union[OrthologGroup, ParalogGroup, Gene]],
         taxonomy: Taxon,
         xml_tree: etree.ElementTree,
         orthoxml_version: str = None
