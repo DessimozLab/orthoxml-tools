@@ -41,26 +41,31 @@ class Species:
         return species_el
 
 class Gene:
-    __slots__ = ["_id", "geneId"]
-    def __init__(self, _id: str, geneId: str):
+    __slots__ = ["_id", "geneId", "protId"]
+    def __init__(self, _id: str, geneId: str, protId: str):
         self._id = _id
         self.geneId = geneId
+        self.protId = protId
 
     def __repr__(self):
-        return f"Gene(id={self._id}, geneId={self.geneId})"
+        return f"Gene(id={self._id}, geneId={self.geneId}, protId={self.protId})"
     
     @classmethod
     def from_xml(cls, xml_element):
         # xml_element is a <gene> element.
         return cls(
             _id=xml_element.get("id"),
-            geneId=xml_element.get("geneId")
+            geneId=xml_element.get("geneId"),
+            protId=xml_element.get("protId")
         )
 
     def to_xml(self):
         gene_el = etree.Element(f"{{{ORTHO_NS}}}gene")
         gene_el.set("id", self._id)
-        gene_el.set("geneId", self.geneId)
+        if self.geneId:
+            gene_el.set("geneId", self.geneId)
+        if self.protId:
+            gene_el.set("protId", self.protId)
         return gene_el
 
 class Taxon:
