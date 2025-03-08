@@ -69,3 +69,13 @@ Root
  Species(name=Pan troglodytes, NCBITaxId=9598, genes=[Gene(id=4, geneId=ptr1)]),
  Species(name=Mus musculus, NCBITaxId=10090, genes=[Gene(id=5, geneId=mmu1)])]
 ```
+
+### Export Options
+*   **Orthologous Pairs**
+
+```python
+>>> tree.to_ortho_pairs()
+[('1', '2'), ('1', '3')]
+>>> tree.to_ortho_pairs(filepath="out.csv") # to also writes the pairs to file
+[('1', '2'), ('1', '3')]
+```
