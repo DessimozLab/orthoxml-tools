@@ -4,6 +4,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
+from .exporters import get_ortho_pairs_recursive
 
 class OrthoXMLTree:
     def __init__(
@@ -80,3 +81,26 @@ class OrthoXMLTree:
 
     def to_orthoxml(self, filepath=None, pretty=True):
         pass
+
+    def to_ortho_pairs(self, filepath=None, sep=",") -> list[(str, str)]:
+        """
+        Recursively traverse the tree and return all of the
+        ortholog pairs in the tree.
+        Specify a filepath if you want to write the pairs to file.
+
+        Args:
+            filepath: Path to write the pairs to
+        Returns:
+            list[(str, str)]: List of ortholog pairs
+        """
+        pairs = []
+        for ortho in self.groups:
+            if isinstance(ortho, OrthologGroup):
+                _, valid_pairs = get_ortho_pairs_recursive(ortho)
+                pairs.extend(valid_pairs)
+        
+        if filepath:
+            with open(filepath, "w") as f:
+                f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
+
+        return pairs
