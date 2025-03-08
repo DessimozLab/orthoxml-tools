@@ -58,7 +58,7 @@ def validate_xml(xml_tree, orthoxml_version):
     except Exception as e:
         logger.error(f"Error: {e}")
 
-def parse_orthoxml(xml_tree) -> tuple:
+def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[OrthologGroup|ParalogGroup|Gene], str]:
     """
     Parse an OrthoXML document into genes, species, and groups.
 
@@ -82,14 +82,17 @@ def parse_orthoxml(xml_tree) -> tuple:
             taxonomy = Taxon.from_xml(taxon_el)
 
     # Parse groups.
-    groups = None
+    groups = []
     groups_el = root.find(f"{{{ORTHO_NS}}}groups")
     if groups_el is not None:
         ortholog_group_el = groups_el.find(f"{{{ORTHO_NS}}}orthologGroup")
         paralog_group_el = groups_el.find(f"{{{ORTHO_NS}}}paralogGroup")
+        genes_el = groups_el.find(f"{{{ORTHO_NS}}}geneRef")
         if ortholog_group_el is not None:
-            groups = OrthologGroup.from_xml(ortholog_group_el)
+            groups.append(OrthologGroup.from_xml(ortholog_group_el))
         elif paralog_group_el is not None:
-            groups = ParalogGroup.from_xml(paralog_group_el)
+            groups.append(ParalogGroup.from_xml(paralog_group_el))
+        elif genes_el is not None:
+            groups.append(Gene.from_xml(genes_el))
 
     return species_list, taxonomy, groups, orthoxml_version

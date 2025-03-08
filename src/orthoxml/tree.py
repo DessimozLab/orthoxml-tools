@@ -10,7 +10,7 @@ class OrthoXMLTree:
         self,
         genes: list[Gene],
         species: list[Species],
-        groups: list[OrthologGroup|ParalogGroup],
+        groups: list[OrthologGroup|ParalogGroup|Gene],
         taxonomy: Taxon,
         xml_tree: etree.ElementTree,
         orthoxml_version: str = None
