@@ -78,10 +78,63 @@ class OrthoXMLTree:
 
     @classmethod
     def from_string(cls, xml_str):
-        pass
+        """
+        Create an OrthoXMLTree instance from an OrthoXML string.
 
-    def to_orthoxml(self, filepath=None, pretty=True):
-        pass
+        Args:
+            xml_str: OrthoXML string
+
+        Returns:
+            OrthoXMLTree: Initialized OrthoXMLTree instance
+
+        Raises:
+            OrthoXMLParsingError: If there's an error parsing the string
+        """
+        try:
+            xml_tree = etree.fromstring(xml_str)
+            species_list, taxonomy, groups, orthoxml_version = parse_orthoxml(xml_tree)
+
+            genes = defaultdict(Gene)
+            for species in species_list:
+                for gene in species.genes:
+                    genes[gene._id] = gene
+            
+            return cls(
+                genes=genes,
+                species=species_list,
+                groups=groups,
+                taxonomy=taxonomy,
+                xml_tree=xml_tree,
+                orthoxml_version=orthoxml_version
+            )
+        except etree.XMLSyntaxError as e:
+            raise OrthoXMLParsingError(f"Invalid XML syntax: {str(e)}") from e
+        except Exception as e:
+            raise OrthoXMLParsingError(f"Error parsing OrthoXML: {str(e)}") from e
+
+
+    def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=False):
+        """
+        Serialize the OrthoXMLTree to an OrthoXML file.
+
+        Args:
+            filepath: Path to write the OrthoXML file
+            pretty: Pretty-print the XML output (default: True)
+            use_source_tree: Use the source XML tree to generate the output (default: False)
+
+        Returns:
+            str: OrthoXML file content
+        """
+        if use_source_tree:
+            xml_tree = self.xml_tree
+        else:
+            raise NotImplementedError("Generating OrthoXML from scratch is not yet supported")
+        
+        if filepath:
+            with open(filepath, "wb") as f:
+                f.write(etree.tostring(xml_tree, pretty_print=pretty))
+        else:
+            return etree.tostring(xml_tree, pretty_print=pretty).decode()
 
     def to_ortho_pairs(self, filepath=None, sep=",") -> list[(str, str)]:
         """
