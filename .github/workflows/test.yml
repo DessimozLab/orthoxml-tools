@@ -26,4 +26,4 @@ jobs:
           pip install '.[test]'
 
       - name: Run tests
-        run: pytest -vv -q --cov=orthoxml
+        run: pytest -vv
