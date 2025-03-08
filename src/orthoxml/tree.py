@@ -1,5 +1,6 @@
 # tree.py
 
+from collections import defaultdict
 from .loaders import load_orthoxml_file, parse_orthoxml
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
@@ -9,7 +10,7 @@ from .exporters import get_ortho_pairs_recursive
 class OrthoXMLTree:
     def __init__(
         self,
-        genes: list[Gene],
+        genes: dict[str, Gene],
         species: list[Species],
         groups: list[OrthologGroup|ParalogGroup|Gene],
         taxonomy: Taxon,
@@ -56,10 +57,10 @@ class OrthoXMLTree:
             species_list, taxonomy, groups, orthoxml_version = parse_orthoxml(xml_tree)
 
             # TODO: Parse genes one time and avoid duplicate representations
-            genes = []
+            genes = defaultdict(Gene)
             for species in species_list:
                 for gene in species.genes:
-                    genes.append(gene)
+                    genes[gene._id] = gene
 
             return cls(
                 genes=genes,
