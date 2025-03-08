@@ -79,3 +79,9 @@ Root
 >>> tree.to_ortho_pairs(filepath="out.csv") # to also writes the pairs to file
 [('1', '2'), ('1', '3')]
 ```
+
+## Testing
+```bash
+uv install `.[test]`
+pytest -vv
+```
