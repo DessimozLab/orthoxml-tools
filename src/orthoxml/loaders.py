@@ -85,14 +85,16 @@ def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[OrthologGroup|P
     groups = []
     groups_el = root.find(f"{{{ORTHO_NS}}}groups")
     if groups_el is not None:
-        ortholog_group_el = groups_el.find(f"{{{ORTHO_NS}}}orthologGroup")
-        paralog_group_el = groups_el.find(f"{{{ORTHO_NS}}}paralogGroup")
-        genes_el = groups_el.find(f"{{{ORTHO_NS}}}geneRef")
-        if ortholog_group_el is not None:
+        # Iterate over all ortholog groups
+        for ortholog_group_el in groups_el.findall(f"{{{ORTHO_NS}}}orthologGroup"):
             groups.append(OrthologGroup.from_xml(ortholog_group_el))
-        elif paralog_group_el is not None:
+
+        # Iterate over all paralog groups
+        for paralog_group_el in groups_el.findall(f"{{{ORTHO_NS}}}paralogGroup"):
             groups.append(ParalogGroup.from_xml(paralog_group_el))
-        elif genes_el is not None:
-            groups.append(Gene.from_xml(genes_el))
+
+        # Iterate over all gene references
+        for gene_el in groups_el.findall(f"{{{ORTHO_NS}}}geneRef"):
+            groups.append(Gene.from_xml(gene_el))
 
     return species_list, taxonomy, groups, orthoxml_version
