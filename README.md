@@ -36,11 +36,17 @@ OrthologGroup(taxonId=5, geneRefs=['5'], orthologGroups=[OrthologGroup(taxonId=4
 
 ```python
 >>> otree.genes
-[Gene(id=1, geneId=hsa1),
- Gene(id=2, geneId=hsa2),
- Gene(id=3, geneId=hsa3),
- Gene(id=4, geneId=ptr1),
- Gene(id=5, geneId=mmu1)]
+defaultdict(orthoxml.models.Gene,
+            {'1000000001': Gene(id=1000000001, geneId=None, protId=GORGO00127),
+             '1000000002': Gene(id=1000000002, geneId=None, protId=GORGO03220),
+             '1000000003': Gene(id=1000000003, geneId=None, protId=GORGO23708),
+             '1000000004': Gene(id=1000000004, geneId=None, protId=GORGO19784),
+             '1001000001': Gene(id=1001000001, geneId=None, protId=HUMAN04170),
+             '1001000002': Gene(id=1001000002, geneId=None, protId=HUMAN60241),
+             '1001000003': Gene(id=1001000003, geneId=None, protId=HUMAN54230),
+             '1002000001': Gene(id=1002000001, geneId=None, protId=PANTR02124),
+             '1002000002': Gene(id=1002000002, geneId=None, protId=PANTR26441),
+             '1002000003': Gene(id=1002000003, geneId=None, protId=PANTR23396)})
 ```
 
 *   **Taxonomy**
@@ -71,6 +77,7 @@ Root
 ```
 
 ### Export Options
+
 *   **Orthologous Pairs**
 
 ```python
@@ -81,7 +88,8 @@ Root
 ```
 
 ## Testing
-```bash
+
+```
 uv install `.[test]`
 pytest -vv
 ```
