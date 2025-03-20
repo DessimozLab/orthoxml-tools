@@ -231,4 +231,26 @@ class OrthologGroup:
             gene_ref_el = etree.SubElement(group_el, f"{{{ORTHO_NS}}}geneRef")
             gene_ref_el.set("id", geneRef)
         return group_el
+
+class UnionFind:
+    """
+    A simple implementation of the Union-Find (Disjoint Set) data structure.
+    Used for detecting orthologous groups based on orthologous pairs.
+    """
+    def __init__(self):
+        self.parent = {}
     
+    def find(self, x):
+        # Initialize parent if not present
+        if x not in self.parent:
+            self.parent[x] = x
+        # Find root parent with path compression
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+    
+    def union(self, x, y):
+        rootX = self.find(x)
+        rootY = self.find(y)
+        if rootX != rootY:
+            self.parent[rootY] = rootX

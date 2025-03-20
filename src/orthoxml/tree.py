@@ -6,7 +6,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
-from .exporters import get_ortho_pairs_recursive
+from .exporters import get_ortho_pairs_recursive, get_ogs
 
 class OrthoXMLTree:
     def __init__(
@@ -159,3 +159,22 @@ class OrthoXMLTree:
                 f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
 
         return pairs
+
+    def to_ogs(self, filepath=None, sep=",") -> dict[str, list[str]]:
+        """
+        Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes.
+
+        Args:
+            filepath: Path to write the pairs to
+        Returns:
+            dict[str, list[str]]: Dictionary of orthologous groups
+        """
+        pairs = self.to_ortho_pairs()
+        ogs = get_ogs(pairs)
+
+        if filepath:
+            with open(filepath, "w") as f:
+                for _, genes in ogs.items():
+                    f.write(f"{sep.join(genes)}\n")
+
+        return ogs

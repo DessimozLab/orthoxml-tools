@@ -1,6 +1,6 @@
 # exporters.py
 
-from .models import OrthologGroup, ParalogGroup
+from .models import OrthologGroup, ParalogGroup, UnionFind
 
 
 def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
@@ -51,3 +51,23 @@ def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
     # but we do not count pairs at this level because then the LCA would be a ParalogGroup.
     
     return gene_refs, pairs
+
+
+def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
+    """
+    Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes."
+    """
+    # Create Union-Find structure
+    uf = UnionFind()
+
+    # Process all pairs
+    for a, b in pairs:
+        uf.union(a, b)
+
+    # Collect groups based on root parent
+    groups = {}
+    for x in uf.parent:
+        root = uf.find(x)
+        groups.setdefault(root, []).append(x)
+    
+    return groups
