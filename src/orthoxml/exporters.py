@@ -3,7 +3,7 @@
 from .models import OrthologGroup, ParalogGroup
 
 
-def get_ortho_pairs_recursive(node) -> list[(str, str)]:
+def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
     """
     Recursively traverse the tree and return a tuple:
       (all_gene_refs_in_subtree, valid_pairs)
