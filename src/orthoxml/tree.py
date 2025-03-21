@@ -162,7 +162,8 @@ class OrthoXMLTree:
 
     def to_ogs(self, filepath=None, sep=",") -> dict[str, list[str]]:
         """
-        Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes.
+        First creates the list of ortholog pairs using self.to_ortho_pairs() then
+        return a dictionary mapping of representative gene to the orthologous group genes.
 
         Args:
             filepath: Path to write the pairs to
