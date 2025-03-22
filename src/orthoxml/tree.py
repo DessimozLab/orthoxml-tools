@@ -6,7 +6,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
-from .exporters import get_ortho_pairs_recursive, get_ogs
+from .exporters import get_ortho_pairs_recursive, get_ogs, compute_gene_counts_per_level
 
 class OrthoXMLTree:
     def __init__(
@@ -31,6 +31,43 @@ class OrthoXMLTree:
     def __repr__(self):
         return f"OrthoXMLTree(genes=[{len(self.genes)} genes], species=[{len(self.species)} species], groups=[{len(self.groups)} groups], taxonomy=[{len(self.taxonomy)} taxons], orthoxml_version={self.orthoxml_version})"
     
+    def base_stats(self):
+        """
+        Compute statistics about the OrthoXML tree.
+
+        Returns:
+            dict: Statistics about the OrthoXML tree
+        """
+    
+        return {
+            "genes": len(self.genes),
+            "species": len(self.species),
+            "groups": len(self.groups),
+            "taxonomy": len(self.taxonomy),
+            "orthoxml_version": self.orthoxml_version
+        }
+    
+    def gene_stats(self, filepath=None, sep=","):
+        """
+        Compute the number of genes per taxonId level in the OrthoXML tree.
+        Write to file if specified.
+
+        Args:
+            filepath: Path to write the gene stats to
+            sep: Separator to use when writing to file
+        Returns:
+            dict: number of genes per taxonId level in the OrthoXML tree
+        """
+        gene_counts_per_level = compute_gene_counts_per_level(self.taxonomy, self.species)
+
+        if filepath:
+            with open(filepath, "w") as f:
+                f.write(f"taxonId{sep}gene_count\n")
+                for level, count in gene_counts_per_level.items():
+                    f.write(f"{level}{sep}{count}\n")
+        
+        return gene_counts_per_level
+
     @classmethod
     def from_file(
         cls, 

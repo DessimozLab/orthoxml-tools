@@ -1,6 +1,6 @@
 # exporters.py
 
-from .models import OrthologGroup, ParalogGroup, UnionFind
+from .models import OrthologGroup, ParalogGroup, UnionFind, Taxon, Species
 
 
 def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
@@ -55,7 +55,7 @@ def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
 
 def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
     """
-    Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes."
+    Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes.
     """
     # Create Union-Find structure
     uf = UnionFind()
@@ -71,3 +71,40 @@ def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
         groups.setdefault(root, []).append(x)
     
     return groups
+
+def compute_gene_counts_per_level(taxonomy: Taxon, species: list[Species]) -> dict[str, int]:
+    """
+    Compute the number of genes per taxon level.
+
+    :param taxonomy: The taxonomy tree
+    :param species: The list of species
+
+    :return: A dictionary with the taxonId as key and the number of genes as value
+    """
+    # Create a dictionary to hold gene counts
+    gene_counts = {}
+
+    # Initialize counts for species using your species_list
+    for sp in species:
+        gene_counts[sp.taxonId] = len(sp.genes)
+
+    # Traverse the tree using DFS and collect nodes in postorder
+    stack = [taxonomy]
+    postorder = []  # this will store nodes in the order they are finished
+
+    while stack:
+        node = stack.pop()
+        postorder.append(node)
+        for child in node.children:
+            stack.append(child)
+
+    # Process nodes in reverse postorder (bottom-up)
+    while postorder:
+        node = postorder.pop()  # processing from leaves upward
+        own_count = gene_counts.get(node.id, 0)
+        total_count = own_count
+        for child in node.children:
+            total_count += gene_counts.get(child.id, 0)
+        gene_counts[node.id] = total_count  # store the total gene count externally
+
+    return gene_counts

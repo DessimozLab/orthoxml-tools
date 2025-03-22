@@ -71,6 +71,26 @@ Root
  Species(name=Mus musculus, NCBITaxId=10090, genes=[Gene(id=5, geneId=mmu1)])]
 ```
 
+### Statistics of the OrthoXML tree
+
+*   **Basic Stats**
+```python
+>>> tree.base_stats()
+{'genes': 10,
+ 'species': 3,
+ 'groups': 3,
+ 'taxonomy': 0,
+ 'orthoxml_version': '0.5'}
+```
+
+*   **Gene Number per Taxonomic Level Stats**
+```python
+>>> tree.gene_stats()
+{'5': 4, '3': 3, '4': 3, '2': 6, '1': 10}
+>>> tree.gene_stats(filepath="out.csv", sep=",") # to also writes the stats to file with two columns: taxonId and gene_count
+{'5': 4, '3': 3, '4': 3, '2': 6, '1': 10}
+```
+
 ### Export Options
 
 *   **Orthologous Pairs**

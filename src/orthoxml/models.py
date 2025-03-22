@@ -7,25 +7,27 @@ NSMAP = {None: ORTHO_NS}
 
 
 class Species:
-    __slots__ = ["name", "NCBITaxId", "genes"]
-    def __init__(self, name, NCBITaxId, genes=None):
+    __slots__ = ["name", "taxonId", "NCBITaxId", "genes"]
+    def __init__(self, name, taxonId, NCBITaxId, genes=None):
         self.name = name
+        self.taxonId = taxonId
         self.NCBITaxId = NCBITaxId
         self.genes = genes or []  # list of Gene objects
     
     def __repr__(self):
-        return f"Species(name={self.name}, NCBITaxId={self.NCBITaxId}, genes={self.genes})"
+        return f"Species(name={self.name}, taxonId={self.taxonId}, NCBITaxId={self.NCBITaxId}, genes={self.genes})"
     
     @classmethod
     def from_xml(cls, xml_element):
         # xml_element is a <species> element.
         name = xml_element.get("name")
-        taxid = xml_element.get("NCBITaxId")
+        ncbi_taxid = xml_element.get("NCBITaxId")
+        taxid = xml_element.get("taxonId")
         genes = []
         # Find all gene elements (searching inside the species element).
         for gene_el in xml_element.xpath(".//ortho:gene", namespaces={"ortho": ORTHO_NS}):
             genes.append(Gene.from_xml(gene_el))
-        return cls(name, taxid, genes)
+        return cls(name, taxid, ncbi_taxid, genes)
 
     def to_xml(self):
         species_el = etree.Element(f"{{{ORTHO_NS}}}species")
