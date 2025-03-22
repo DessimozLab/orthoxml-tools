@@ -218,6 +218,31 @@ class OrthoXMLTree:
                 f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
 
         return pairs
+    
+    def to_ortho_pairs_of_gene(self, gene_id: str, filepath=None, sep=",") -> list[(str, str)]:
+        """
+        Recursively traverse the tree and return all of the
+        ortholog pairs of a specific gene in the tree.
+
+        Args:
+            gene_id: Gene ID to get ortholog pairs for
+        Returns:
+            list[(str, str)]: List of ortholog pairs for the gene
+        """
+        # TODO: Refactor this to do it efficiently
+        pairs = []
+        for ortho in self.groups:
+            if isinstance(ortho, OrthologGroup):
+                _, valid_pairs = get_ortho_pairs_recursive(ortho)
+                for pair in valid_pairs:
+                    if gene_id in pair:
+                        pairs.append(pair)
+        
+        if filepath:
+            with open(filepath, "w") as f:
+                f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
+
+        return pairs
 
     def to_ogs(self, filepath=None, sep=",") -> dict[str, list[str]]:
         """
