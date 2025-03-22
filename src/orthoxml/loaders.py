@@ -99,3 +99,28 @@ def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[Union[OrthologG
             groups.append(Gene.from_xml(gene_el))
 
     return species_list, taxonomy, groups, orthoxml_version
+
+def filter_by_score(xml_tree, score_id, score_threshold) -> None:
+    """
+    Filter OrthoXML document by score. Works in-place.
+
+    Code from https://github.com/DessimozLab/FastOMA/blob/main/FastOMA/zoo/hog/filter_orthoxml.py
+
+    :param xml_tree: An instance of the XML tree.
+    :param score_id: The score ID.
+    :param score_threshold: The score threshold.
+    """
+    root = xml_tree.getroot()
+    to_rem = []
+    for hog in root.iterfind('.//{{{0}}}orthologGroup'.format(ORTHO_NS)):
+        score = hog.find('./{{{0}}}score'.format(ORTHO_NS))
+        if score is None:
+            continue
+        if score.get('id') == score_id and float(score.get('value')) < score_threshold:
+            to_rem.append(hog)
+    for h in to_rem:
+        parent = h.getparent()
+        if parent is not None:
+            parent.remove(h)
+            if sum(c.tag == "{{{0}}}orthologGroup".format(ORTHO_NS) for c in parent) == 0:
+                to_rem.append(parent)

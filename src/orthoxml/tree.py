@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from typing import Union
-from .loaders import load_orthoxml_file, parse_orthoxml
+from .loaders import load_orthoxml_file, parse_orthoxml, filter_by_score
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
@@ -71,7 +71,8 @@ class OrthoXMLTree:
     @classmethod
     def from_file(
         cls, 
-        filepath: str, 
+        filepath: str,
+        CompletenessScore_threshold: float = None, 
         validate: bool = False,
     ) -> "OrthoXMLTree":
         """
@@ -79,7 +80,8 @@ class OrthoXMLTree:
 
         Args:
             filepath: Path to the OrthoXML file
-            orthoxml_version: OrthoXML schema version to use (default: None)
+            CompletenessScore_threshold: Threshold value to filter by
+            validate: Validate the XML file against the schema (default: False)
 
         Returns:
             OrthoXMLTree: Initialized OrthoXMLTree instance
@@ -91,6 +93,12 @@ class OrthoXMLTree:
             # Load XML document and validate against schema
             xml_tree = load_orthoxml_file(filepath, validate)
             
+            # Apply the filter if specified
+            # TODO: Refactor this to be able to filter after the loading too
+            # TODO: Better abstraction for the name of the arg CompletenessScore_threshold
+            if CompletenessScore_threshold:
+                filter_by_score(xml_tree, "CompletenessScore", CompletenessScore_threshold)
+
             # Parse XML elements into domain models
             species_list, taxonomy, groups, orthoxml_version = parse_orthoxml(xml_tree)
 
@@ -115,12 +123,16 @@ class OrthoXMLTree:
             raise OrthoXMLParsingError(f"Error parsing OrthoXML: {str(e)}") from e
 
     @classmethod
-    def from_string(cls, xml_str):
+    def from_string(cls,
+                    xml_str: str,
+                    CompletenessScore_threshold: float = None
+                    ) -> "OrthoXMLTree":
         """
         Create an OrthoXMLTree instance from an OrthoXML string.
 
         Args:
             xml_str: OrthoXML string
+            CompletenessScore_threshold: Threshold value to filter by
 
         Returns:
             OrthoXMLTree: Initialized OrthoXMLTree instance
@@ -130,6 +142,10 @@ class OrthoXMLTree:
         """
         try:
             xml_tree = etree.fromstring(xml_str)
+
+            if CompletenessScore_threshold:
+                filter_by_score(xml_tree, "CompletenessScore", CompletenessScore_threshold)
+
             species_list, taxonomy, groups, orthoxml_version = parse_orthoxml(xml_tree)
 
             genes = defaultdict(Gene)

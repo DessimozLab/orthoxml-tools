@@ -23,6 +23,15 @@ pip install orthoxml
 OrthoXMLTree(genes=[5 genes], species=[3 species], groups=[0 groups], taxonomy=[0 taxons], orthoxml_version=0.5)
 ```
 
+### Filter Based on CompletenessScore at Loading
+```python
+>>> from orthoxml import OrthoXMLTree
+>>> otree = OrthoXMLTree.from_file("data/orthoxml.xml", CompletenessScore_threshold=0.95, validate=True)
+>>> otree
+2025-02-11 11:43:17 - loaders - INFO - OrthoXML file is valid for version 0.5
+OrthoXMLTree(genes=[5 genes], species=[3 species], groups=[0 groups], taxonomy=[0 taxons], orthoxml_version=0.5)
+```
+
 ### Accessing Specific Data
 
 *   **Groups**
