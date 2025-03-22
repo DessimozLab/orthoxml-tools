@@ -150,6 +150,28 @@ class OrthoXMLTree:
         except Exception as e:
             raise OrthoXMLParsingError(f"Error parsing OrthoXML: {str(e)}") from e
 
+    def split_by_rootHOGs(self) -> list["OrthoXMLTree"]:
+        """
+        Split the current OrthoXMLTree into multiple trees based on the root HOGs.
+
+        Returns:
+            list[OrthoXMLTree]: List of OrthoXMLTree instances created from the root HOGs.
+        """
+        # Identify root HOGs: OrthologGroups with no parent.
+        root_hogs = [g for g in self.groups if isinstance(g, OrthologGroup)]
+
+        ## TODO: update the genes and species and taxonomy to reflect the new tree
+        trees = []
+        for hog in root_hogs:
+            trees.append(OrthoXMLTree(
+                genes=self.genes,
+                species=self.species,
+                groups=hog,
+                taxonomy=self.taxonomy,
+                xml_tree=self.xml_tree,
+                orthoxml_version=self.orthoxml_version
+            ))
+        return trees
 
     def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=False):
         """
