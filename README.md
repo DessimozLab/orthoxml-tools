@@ -84,7 +84,7 @@ Root
 
 *   **Basic Stats**
 ```python
->>> tree.base_stats()
+>>> otree.base_stats()
 {'genes': 10,
  'species': 3,
  'groups': 3,
@@ -94,10 +94,19 @@ Root
 
 *   **Gene Number per Taxonomic Level Stats**
 ```python
->>> tree.gene_stats()
+>>> otree.gene_stats()
 {'5': 4, '3': 3, '4': 3, '2': 6, '1': 10}
->>> tree.gene_stats(filepath="out.csv", sep=",") # to also writes the stats to file with two columns: taxonId and gene_count
+>>> otree.gene_stats(filepath="out.csv", sep=",") # to also writes the stats to file with two columns: taxonId and gene_count
 {'5': 4, '3': 3, '4': 3, '2': 6, '1': 10}
+```
+
+### Manipulate the Tree
+
+* **Split an instance of OrthoXML Tree to separate OrthoXML Trees based on rootHOGs**
+```python
+>>> otrees = otree.split_by_rootHOGs()
+>>> otrees[0].groups
+OrthologGroup(taxonId=1, geneRefs=['1000000002'], orthologGroups=[OrthologGroup(taxonId=2, geneRefs=['1001000001', '1002000001'], orthologGroups=[], paralogGroups=[])], paralogGroups=[])
 ```
 
 ### Export Options
@@ -105,20 +114,29 @@ Root
 *   **Orthologous Pairs**
 
 ```python
->>> tree.to_ortho_pairs()
+>>> otree.to_ortho_pairs()
 [('1', '2'), ('1', '3')]
->>> tree.to_ortho_pairs(filepath="out.csv") # to also writes the pairs to file
+>>> otree.to_ortho_pairs(filepath="out.csv") # to also writes the pairs to file
 [('1', '2'), ('1', '3')]
+```
+
+*   **Get Orthologous Pairs of an Specific Gene**
+
+```python
+>>> otree.to_ortho_pairs_of_gene("1001000001")
+[('1001000001', '1002000001'), ('1000000002', '1001000001')]
+>>> otree.to_ortho_pairs_of_gene("1001000001", filepath="out.csv") # to also writes the pairs to file
+[('1001000001', '1002000001'), ('1000000002', '1001000001')]
 ```
 
 *   **Orthologous Groups**
 
 ```python
->>> tree.to_ogs()
+>>> otree.to_ogs()
 {'1000000002': ['1001000001', '1002000001', '1000000002'],
  '1000000003': ['1001000002', '1002000002', '1000000003'],
  '1000000004': ['1001000003', '1002000003', '1000000004']}
->>> tree.to_ogs(filepath="out.csv") # to also writes the groups to file
+>>> otree.to_ogs(filepath="out.csv") # to also writes the groups to file
 {'1000000002': ['1001000001', '1002000001', '1000000002'],
  '1000000003': ['1001000002', '1002000002', '1000000003'],
  '1000000004': ['1001000003', '1002000003', '1000000004']}
