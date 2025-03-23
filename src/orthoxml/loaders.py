@@ -1,4 +1,5 @@
 # loaders.py
+
 import os
 from importlib import resources
 from typing import Union
@@ -37,12 +38,14 @@ def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTr
     else:
         return tree
 
-def validate_xml(xml_tree, orthoxml_version):
+def validate_xml(xml_tree, orthoxml_version) -> bool:
     """
     Validate an OrthoXML document against the scheme.
     
     :param xml_tree: An instance of the XML tree.
     :param orthoxml_version: The OrthoXML version.
+
+    :return: True if the document is valid, False otherwise.
     """
     try:
         # Load XSD schema from package resources
@@ -55,15 +58,17 @@ def validate_xml(xml_tree, orthoxml_version):
             return True
         else:
             logger.warning(schema.error_log)
+            return False
             
     except Exception as e:
         logger.error(f"Error: {e}")
 
 def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[Union[OrthologGroup, ParalogGroup, Gene]], str]:
     """
-    Parse an OrthoXML document into genes, species, and groups.
+    Parse an OrthoXML document into species, taxonomy, groups, and version.
 
     :param xml_tree: An instance of the XML tree.
+
     :return: A tuple of species_list, taxonomy, groups, and the OrthoXML version.
     """    
     root = xml_tree.getroot()

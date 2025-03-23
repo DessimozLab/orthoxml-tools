@@ -25,13 +25,13 @@ class OrthoXMLTree:
         self.xml_tree = xml_tree
         self.orthoxml_version = orthoxml_version
 
-    def debug_repr(self):
+    def debug_repr(self) -> str:
         return f"OrthoXMLTree(genes={self.genes}, species={self.species}, groups={self.groups}, taxonomy={self.taxonomy}, orthoxml_version={self.orthoxml_version})"
         
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"OrthoXMLTree(genes=[{len(self.genes)} genes], species=[{len(self.species)} species], groups=[{len(self.groups)} groups], taxonomy=[{len(self.taxonomy)} taxons], orthoxml_version={self.orthoxml_version})"
     
-    def base_stats(self):
+    def base_stats(self) -> dict:
         """
         Compute statistics about the OrthoXML tree.
 
@@ -47,7 +47,7 @@ class OrthoXMLTree:
             "orthoxml_version": self.orthoxml_version
         }
     
-    def gene_stats(self, filepath=None, sep=","):
+    def gene_stats(self, filepath=None, sep=",") -> dict:
         """
         Compute the number of genes per taxonId level in the OrthoXML tree.
         Write to file if specified.
@@ -189,7 +189,7 @@ class OrthoXMLTree:
             ))
         return trees
 
-    def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=False):
+    def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=False) -> str:
         """
         Serialize the OrthoXMLTree to an OrthoXML file.
 

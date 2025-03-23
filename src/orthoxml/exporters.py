@@ -3,12 +3,16 @@
 from .models import OrthologGroup, ParalogGroup, UnionFind, Taxon, Species
 
 
-def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
+def get_ortho_pairs_recursive(node: OrthologGroup) -> tuple[list[str], list[(str, str)]]:
     """
     Recursively traverse the tree and return a tuple:
       (all_gene_refs_in_subtree, valid_pairs)
     where valid_pairs is a list of tuple pairs (r, s) of geneRefs for which
     the lowest common ancestor is not a ParalogGroup.
+
+    :param node: The OrthologGroup node to start the traversal from.
+
+    :return: A tuple of all orthologous pairs.
     """
     # Start with geneRefs at the current node.
     gene_refs = list(node.geneRefs)
@@ -56,6 +60,11 @@ def get_ortho_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
 def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
     """
     Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes.
+    Uses Union-Find to group genes.
+
+    :param pairs: A list of orthologous gene pairs.
+
+    :return: A dictionary of representative gene to orthologous group genes.
     """
     # Create Union-Find structure
     uf = UnionFind()

@@ -1,4 +1,5 @@
 # models.py
+
 from lxml import etree
 
 # Define the orthoXML namespace and namespace map.
@@ -85,7 +86,7 @@ class Taxon:
         return 0
     
     @classmethod
-    def from_xml(cls, xml_element):
+    def from_xml(cls, xml_element) -> "Taxon":
         # xml_element is a <taxon> element.
         taxon_id = xml_element.get("id")
         name = xml_element.get("name")
@@ -95,7 +96,7 @@ class Taxon:
             children.append(Taxon.from_xml(child))
         return cls(taxon_id, name, children)
 
-    def to_xml(self):
+    def to_xml(self) -> etree.Element:
         taxon_el = etree.Element(f"{{{ORTHO_NS}}}taxon")
         taxon_el.set("id", self.id)
         taxon_el.set("name", self.name)
@@ -103,7 +104,7 @@ class Taxon:
             taxon_el.append(child.to_xml())
         return taxon_el
 
-    def to_str(self):
+    def to_str(self) -> str:
         """
         Returns a string representation of the taxonomy tree in a hierarchical format.
         Example output:
@@ -155,7 +156,7 @@ class ParalogGroup:
         return 0
     
     @classmethod
-    def from_xml(cls, xml_element):
+    def from_xml(cls, xml_element) -> "ParalogGroup":
         # xml_element is a <paralogGroup> element.
         taxonId = xml_element.get("taxonId")
         geneRefs = []
@@ -172,7 +173,7 @@ class ParalogGroup:
                 paralogGroups.append(ParalogGroup.from_xml(child))
         return cls(taxonId, geneRefs, subgroups, paralogGroups)
     
-    def to_xml(self):
+    def to_xml(self) -> etree.Element:
         group_el = etree.Element(f"{{{ORTHO_NS}}}paralogGroup")
         if self.taxonId:
             group_el.set("taxonId", self.taxonId)
@@ -203,7 +204,7 @@ class OrthologGroup:
         return 0
     
     @classmethod
-    def from_xml(cls, xml_element):
+    def from_xml(cls, xml_element) -> "OrthologGroup":
         # xml_element is an <orthologGroup> element.
         taxonId = xml_element.get("taxonId")
         geneRefs = []
@@ -220,7 +221,7 @@ class OrthologGroup:
                 paralogGroups.append(ParalogGroup.from_xml(child))
         return cls(taxonId, geneRefs, subgroups, paralogGroups)
 
-    def to_xml(self):
+    def to_xml(self) -> etree.Element:
         group_el = etree.Element(f"{{{ORTHO_NS}}}orthologGroup")
         if self.taxonId:
             group_el.set("taxonId", self.taxonId)
@@ -243,6 +244,10 @@ class UnionFind:
         self.parent = {}
     
     def find(self, x):
+        """
+        Find the root parent of the set containing element
+        x with path compression.
+        """
         # Initialize parent if not present
         if x not in self.parent:
             self.parent[x] = x
@@ -252,6 +257,9 @@ class UnionFind:
         return self.parent[x]
     
     def union(self, x, y):
+        """
+        Merge the sets containing elements x and y.
+        """
         rootX = self.find(x)
         rootY = self.find(y)
         if rootX != rootY:
