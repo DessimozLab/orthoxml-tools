@@ -11,6 +11,9 @@ dependencies = [
     "lxml>=5.3.0",
 ]
 
+[project.scripts]
+orthoxml = "orthoxml.cli:main"
+
 [project.optional-dependencies]
 test = [
     "pytest>=7.0.0",
