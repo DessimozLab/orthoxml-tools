@@ -57,31 +57,53 @@ def get_ortho_pairs_recursive(node: OrthologGroup) -> tuple[list[str], list[(str
     return gene_refs, pairs
 
 
-def get_paralog_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
+def get_paralog_pairs_recursive(node: OrthologGroup) -> tuple[list[str], list[(str, str)]]:
     """
-    Recursively traverse the tree and return a list of pairs of geneRefs
-    for which the lowest common ancestor is a ParalogGroup.
+    Recursively traverse the tree and return a tuple:
+      (all_gene_refs_in_subtree, valid_pairs)
+    where valid_pairs is a list of tuple pairs (r, s) of geneRefs for which
+    the lowest common ancestor is a ParalogGroup.
 
     :param node: The OrthologGroup node to start the traversal from.
-
-    :return: A list of pairs of geneRefs.
+    :return: A tuple of all paralogous pairs.
     """
-    # Start with an empty list of pairs
+    # Start with geneRefs at the current node.
+    gene_refs = list(node.geneRefs)
     pairs = []
 
     # Process both ortholog and paralog children.
+    # We also keep track of the geneRefs from each child separately so that we only
+    # pair refs coming from different branches when the current node is a ParalogGroup.
+    child_gene_refs_list = []
     for child in node.orthologGroups + node.paralogGroups:
-        child_pairs = get_paralog_pairs_recursive(child)
+        child_refs, child_pairs = get_paralog_pairs_recursive(child)
         pairs.extend(child_pairs)
+        child_gene_refs_list.append(child_refs)
+        gene_refs.extend(child_refs)
 
-    # If the current node is a ParalogGroup, then we want to pair all geneRefs
-    # coming from different branches at this node.
+    # If the current node is a ParalogGroup, then geneRefs coming from different
+    # branches (or from the current node vs. a child branch) have their lowest common
+    # ancestor at this node, and are considered paralogous.
     if isinstance(node, ParalogGroup):
+        # Pair the current node's own geneRefs with each child's refs.
+        for child_refs in child_gene_refs_list:
+            for r in node.geneRefs:
+                for s in child_refs:
+                    pairs.append((r, s))
+
+        # Pair geneRefs coming from different children branches.
+        for i in range(len(child_gene_refs_list)):
+            for j in range(i + 1, len(child_gene_refs_list)):
+                for r in child_gene_refs_list[i]:
+                    for s in child_gene_refs_list[j]:
+                        pairs.append((r, s))
+
+        # Also pair geneRefs coming from the current node with each other.
         for i in range(len(node.geneRefs)):
-            for j in range(i+1, len(node.geneRefs)):
+            for j in range(i + 1, len(node.geneRefs)):
                 pairs.append((list(node.geneRefs)[i], list(node.geneRefs)[j]))
 
-    return pairs
+    return gene_refs, pairs
 
 
 def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:

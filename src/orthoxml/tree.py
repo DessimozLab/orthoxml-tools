@@ -274,7 +274,7 @@ class OrthoXMLTree:
         pairs = []
         
         for grp in self.groups:
-            valid_pairs = get_paralog_pairs_recursive(grp)
+            _, valid_pairs = get_paralog_pairs_recursive(grp)
             pairs.extend(valid_pairs)
 
         if filepath:
@@ -297,7 +297,7 @@ class OrthoXMLTree:
         """
         pairs = []
         for grp in self.groups:
-            valid_pairs = get_paralog_pairs_recursive(grp)
+            _, valid_pairs = get_paralog_pairs_recursive(grp)
             for pair in valid_pairs:
                 if gene_id in pair:
                     pairs.append(pair)
