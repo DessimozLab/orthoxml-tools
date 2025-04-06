@@ -279,3 +279,9 @@ class OrthoXMLTree:
                     f.write(f"{sep.join(genes)}\n")
 
         return ogs
+
+    def to_gene_tree(self, filepath=None, format="nhx"):
+        """
+        Transform an orthoxml tree to an annotated gene tree. 
+        """
+        raise NotImplementedError
