@@ -189,7 +189,7 @@ class OrthoXMLTree:
             ))
         return trees
 
-    def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=False) -> str:
+    def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=True) -> str:
         """
         Serialize the OrthoXMLTree to an OrthoXML file.
 
@@ -204,7 +204,7 @@ class OrthoXMLTree:
         if use_source_tree:
             xml_tree = self.xml_tree
         else:
-            raise NotImplementedError("Generating OrthoXML from scratch is not yet supported")
+            raise NotImplementedError("Generating OrthoXML from scratch is not yet supported. Please use with use_source_tree=True.")
         
         if filepath:
             with open(filepath, "wb") as f:
