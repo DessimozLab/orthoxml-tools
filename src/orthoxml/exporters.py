@@ -57,6 +57,33 @@ def get_ortho_pairs_recursive(node: OrthologGroup) -> tuple[list[str], list[(str
     return gene_refs, pairs
 
 
+def get_paralog_pairs_recursive(node: OrthologGroup) -> list[(str, str)]:
+    """
+    Recursively traverse the tree and return a list of pairs of geneRefs
+    for which the lowest common ancestor is a ParalogGroup.
+
+    :param node: The OrthologGroup node to start the traversal from.
+
+    :return: A list of pairs of geneRefs.
+    """
+    # Start with an empty list of pairs
+    pairs = []
+
+    # Process both ortholog and paralog children.
+    for child in node.orthologGroups + node.paralogGroups:
+        child_pairs = get_paralog_pairs_recursive(child)
+        pairs.extend(child_pairs)
+
+    # If the current node is a ParalogGroup, then we want to pair all geneRefs
+    # coming from different branches at this node.
+    if isinstance(node, ParalogGroup):
+        for i in range(len(node.geneRefs)):
+            for j in range(i+1, len(node.geneRefs)):
+                pairs.append((list(node.geneRefs)[i], list(node.geneRefs)[j]))
+
+    return pairs
+
+
 def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
     """
     Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes.

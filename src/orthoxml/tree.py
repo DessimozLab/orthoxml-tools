@@ -6,7 +6,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml, filter_by_score
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
-from .exporters import get_ortho_pairs_recursive, get_ogs, compute_gene_counts_per_level
+from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ogs, compute_gene_counts_per_level
 
 class OrthoXMLTree:
     def __init__(
@@ -258,6 +258,53 @@ class OrthoXMLTree:
             with open(filepath, "w") as f:
                 f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
 
+        return pairs
+    
+    def to_paralog_pairs(self, filepath=None, sep=",") -> list[(str, str)]:
+        """
+        Recursively traverse the tree and return all of the
+        paralog pairs in the tree.
+        Specify a filepath if you want to write the pairs to file.
+
+        Args:
+            filepath: Path to write the pairs to
+        Returns:
+            list[(str, str)]: List of paralog pairs
+        """
+        pairs = []
+        
+        for grp in self.groups:
+            _, valid_pairs = get_paralog_pairs_recursive(grp)
+            pairs.extend(valid_pairs)
+
+        if filepath:
+            with open(filepath, "w") as f:
+                f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
+        
+        return pairs
+
+
+    def to_paralog_pairs_of_gene(self, gene_id: str, filepath=None, sep=",") -> list[(str, str)]:
+        """
+        Recursively traverse the tree and return all of the
+        paralog pairs of a specific gene in the tree.
+        Specify a filepath if you want to write the pairs to file.
+
+        Args:
+            gene_id: Gene ID to get paralog pairs for
+        Returns:
+            list[(str, str)]: List of paralog pairs for the gene
+        """
+        pairs = []
+        for grp in self.groups:
+            _, valid_pairs = get_paralog_pairs_recursive(grp)
+            for pair in valid_pairs:
+                if gene_id in pair:
+                    pairs.append(pair)
+        if filepath:
+            with open(filepath, "w") as f:
+                f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
+        
         return pairs
 
     def to_ogs(self, filepath=None, sep=",") -> dict[str, list[str]]:
