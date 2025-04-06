@@ -6,7 +6,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml, filter_by_score
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
-from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ogs, compute_gene_counts_per_level
+from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ogs, compute_gene_counts_per_level, OrthoxmlToNewick
 
 class OrthoXMLTree:
     def __init__(
@@ -327,8 +327,40 @@ class OrthoXMLTree:
 
         return ogs
 
-    def to_gene_tree(self, filepath=None, format="nhx"):
+    def to_gene_tree(self, xref_tag="protId", encode_levels_as_nhx=False, return_gene_to_species=False, filepath=None):
+        """Convert all HOGs from an orthoxml file into newick trees using a fully loaded etree.
+
+        This function converts all top-level orthologGroups into a dictionary of newick trees.
+        Duplication nodes are labeled with the NHX tag, e.g., a paralogGroup node will be translated
+        into an internal node labeled as [&&NHX:Ev=duplication].
+
+        :param filename: the filename of the input orthoxml file.
+        :param xref_tag: the attribute of the <gene> element used as the leaf label.
+        :param encode_levels_as_nhx: if True, the species information will be returned in NHX format,
+                                    otherwise, the TaxRange value will be used as the node label.
+        :param return_gene_to_species: if True, returns a tuple with the tree dictionary and a gene-to-species mapping.
+        :returns: a dict of {roothogid: tree} in NHX format, or a tuple (trees, gene_to_species) if requested.
         """
-        Transform an orthoxml tree to an annotated gene tree. 
-        """
-        raise NotImplementedError
+        target = OrthoxmlToNewick(
+            xref_tag=xref_tag,
+            encode_levels_as_nhx=encode_levels_as_nhx,
+            return_gene_to_species=return_gene_to_species)
+
+        # TODO: for now it uses the original xml, it should use the native data to be able to track updates
+
+        # Recursively traverse the tree to simulate start and end events.
+        def traverse(elem):
+            target.start(elem.tag, elem.attrib)
+            for child in elem:
+                traverse(child)
+            target.end(elem.tag)
+
+        traverse(self.xml_tree.getroot())
+        gene_trees = target.close()
+
+        if filepath:
+            for hog_id, tree in gene_trees.items():
+                with open(f"{filepath}_{hog_id}.newick", "w") as f:
+                    f.write(tree)
+        
+        return gene_trees
