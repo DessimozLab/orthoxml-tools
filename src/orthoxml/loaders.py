@@ -105,7 +105,7 @@ def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[Union[OrthologG
 
     return species_list, taxonomy, groups, orthoxml_version
 
-def filter_by_score(xml_tree, score_id, score_threshold) -> None:
+def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True) -> None:
     """
     Filter OrthoXML document by score. Works in-place.
 
@@ -120,7 +120,11 @@ def filter_by_score(xml_tree, score_id, score_threshold) -> None:
     for hog in root.iterfind('.//{{{0}}}orthologGroup'.format(ORTHO_NS)):
         score = hog.find('./{{{0}}}score'.format(ORTHO_NS))
         if score is None:
-            continue
+            if skip_no_scores:
+                continue
+            else:
+                to_rem.append(hog)
+                continue
         if score.get('id') == score_id and float(score.get('value')) < score_threshold:
             to_rem.append(hog)
     for h in to_rem:
