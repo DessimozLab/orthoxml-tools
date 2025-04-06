@@ -341,6 +341,8 @@ class OrthoXMLTree:
         :param return_gene_to_species: if True, returns a tuple with the tree dictionary and a gene-to-species mapping.
         :returns: a dict of {roothogid: tree} in NHX format, or a tuple (trees, gene_to_species) if requested.
         """
+        # TODO: the gene_to_species=True will break the code here!
+
         target = OrthoxmlToNewick(
             xref_tag=xref_tag,
             encode_levels_as_nhx=encode_levels_as_nhx,
