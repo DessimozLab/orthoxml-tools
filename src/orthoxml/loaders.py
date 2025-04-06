@@ -105,7 +105,7 @@ def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[Union[OrthologG
 
     return species_list, taxonomy, groups, orthoxml_version
 
-def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True) -> None:
+def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True, keep_low_score_parents=False) -> None:
     """
     Filter OrthoXML document by score. Works in-place.
 
@@ -114,6 +114,8 @@ def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True) ->
     :param xml_tree: An instance of the XML tree.
     :param score_id: The score ID.
     :param score_threshold: The score threshold.
+    :param skip_no_scores: If True, skip ortholog groups without scores. If False, remove them.
+    :param keep_low_score_parents: If True, keep parents of low-scoring ortholog groups.
     """
     root = xml_tree.getroot()
     to_rem = []
@@ -127,6 +129,13 @@ def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True) ->
                 continue
         if score.get('id') == score_id and float(score.get('value')) < score_threshold:
             to_rem.append(hog)
+        if keep_low_score_parents and score.get('id') == score_id and float(score.get('value')) >= score_threshold:
+            # remove all parents of this score from remove list
+            for parent in hog.iterancestors():
+                if parent.tag == "{{{0}}}orthologGroup".format(ORTHO_NS):
+                    if parent in to_rem:
+                        to_rem.remove(parent)
+
     for h in to_rem:
         parent = h.getparent()
         if parent is not None:
