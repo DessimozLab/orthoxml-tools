@@ -108,6 +108,10 @@ class OrthoXMLTree:
                 for gene in species.genes:
                     genes[gene._id] = gene
 
+            # TODO: handle no taxonomy
+            if not taxonomy:
+                taxonomy = Taxon(id='0', name='root')
+            
             return cls(
                 genes=genes,
                 species=species_list,
