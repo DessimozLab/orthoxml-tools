@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<orthoXML xmlns="http://orthoXML.org/2011/" version="0.5" origin="orthoXML.org" originVersion="1">
+  <species name="Homo sapiens" NCBITaxId="9606">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="1" geneId="hsa1"/>
+        <gene id="2" geneId="hsa2"/>
+        <gene id="3" geneId="hsa3"/>
+      </genes>
+    </database>
+  </species>
+  <species name="Pan troglodytes" NCBITaxId="9598">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="4" geneId="ptr1"/>
+      </genes>
+    </database>
+  </species>
+  <species name="Mus musculus" NCBITaxId="10090">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="5" geneId="mmu1"/>
+      </genes>
+    </database>
+  </species>
+  <taxonomy>
+    <taxon id="5" name="Root">
+      <taxon id="3" name="Mus musculus"/>
+      <taxon id="4" name="Primates">
+        <taxon id="1" name="Homo sapiens"/>
+        <taxon id="2" name="Pan troglodytes"/>
+      </taxon>
+    </taxon>
+  </taxonomy>
+  <groups>
+    <orthologGroup taxonId="5">
+      <orthologGroup taxonId="4">
+        <paralogGroup>
+          <geneRef id="1" />
+          <geneRef id="2" />
+          <geneRef id="3" />
+        </paralogGroup>
+        <geneRef id="4" />
+      </orthologGroup>
+      <orthologGroup>
+        <geneRef id="9" />
+        <geneRef id="8" />
+      </orthologGroup>
+      <geneRef id="5" />
+      <geneRef id="10"/>
+    </orthologGroup>
+    <paralogGroup taxonId="5">
+      <geneRef id="8" />
+      <geneRef id="9" />  
+    </paralogGroup>
+    <geneRef id="6" />
+    <geneRef id="7" />
+  </groups>
+</orthoXML>

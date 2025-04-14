@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<orthoXML xmlns="http://orthoXML.org/2011/" version="0.4" origin="orthoXML.org" originVersion="1">
+  <species name="Homo sapiens" NCBITaxId="9606">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="1" geneId="hsa1" protId="hsa1" />
+      </genes>
+    </database>
+  </species>
+  <species name="Pan troglodytes" NCBITaxId="9598">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="2" geneId="ptr1"/>
+      </genes>
+    </database>
+  </species>
+  <species name="Mus musculus" NCBITaxId="10090">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="3" geneId="mmu1"/>
+        <gene id="4" geneId="mmu2"/>
+      </genes>
+    </database>
+  </species>
+  <species name="Rattus norvegicus" NCBITaxId="10116">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="5" geneId="rno1"/>
+        <gene id="6" geneId="rno2"/>
+      </genes>
+    </database>
+  </species>
+  <groups>
+    <orthologGroup>
+      <orthologGroup>
+        <geneRef id="1" />
+        <geneRef id="2" />
+      </orthologGroup>
+      <paralogGroup>
+        <orthologGroup>
+          <geneRef id="3" />
+          <geneRef id="5" />
+        </orthologGroup>
+        <orthologGroup>
+          <geneRef id="4" />
+          <geneRef id="6" />
+        </orthologGroup>
+      </paralogGroup>
+    </orthologGroup>
+  </groups>
+</orthoXML>

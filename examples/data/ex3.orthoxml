@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<orthoXML xmlns="http://orthoXML.org/2011/" version="0.4" origin="orthoXML.org" originVersion="1">
+  <species name="Homo sapiens" NCBITaxId="9606">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="1" geneId="hsa1"/>
+        <gene id="2" geneId="hsa2"/>
+        <gene id="3" geneId="hsa3"/>
+      </genes>
+    </database>
+  </species>
+  <species name="Pan troglodytes" NCBITaxId="9598">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="4" geneId="ptr1"/>
+      </genes>
+    </database>
+  </species>
+  <species name="Mus musculus" NCBITaxId="10090">
+    <database name="someDB" version="42">
+      <genes>
+        <gene id="5" geneId="mmu1"/>
+      </genes>
+    </database>
+  </species>
+  <groups>
+    <orthologGroup>
+      <orthologGroup>
+        <paralogGroup>
+          <geneRef id="1" />
+          <geneRef id="2" />
+          <geneRef id="3" />
+        </paralogGroup>
+        <geneRef id="4" />
+      </orthologGroup>
+      <geneRef id="5" />
+    </orthologGroup>
+  </groups>
+</orthoXML>
