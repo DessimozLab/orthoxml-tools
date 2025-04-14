@@ -142,6 +142,9 @@ OrthologGroup(taxonId=1, geneRefs=['1000000002'], orthologGroups=[OrthologGroup(
  '1000000004': ['1001000003', '1002000003', '1000000004']}
 ```
 
+# Usage from CLI
+The `orthoxml-tools` package also provides a command-line interface for working with OrthoXML files. For more information on it checkout [CLI-README.md](./CLI-README.md)
+
 ## Testing
 
 ```
