@@ -2,6 +2,82 @@
 
 from .models import OrthologGroup, ParalogGroup, UnionFind, Taxon, Species
 
+def get_ortho_pairs_iterative(root):
+    """
+    Iteratively traverse the tree starting at the given root node and yield valid ortholog pairs.
+    A valid pair is yielded when the lowest common ancestor of the genes is not a ParalogGroup.
+    
+    This function uses an explicit stack to perform a postorder traversal.
+    Each stack frame is a dictionary with:
+      - 'node': the current node,
+      - 'children': a list of this node's children (both ortholog and paralog groups),
+      - 'child_index': index for the next child to process,
+      - 'child_gene_refs_list': a list where each element is a list of gene references from one child subtree.
+    
+    The function yields a tuple (geneRef1, geneRef2) for every valid pair discovered.
+    """
+    stack = []
+    # Push the root node frame onto the stack.
+    stack.append({
+        'node': root,
+        'children': root.orthologGroups + root.paralogGroups,
+        'child_index': 0,
+        'child_gene_refs_list': []
+    })
+    
+    while stack:
+        current = stack[-1]
+        node = current['node']
+        children = current['children']
+        child_index = current['child_index']
+        
+        # If not all children have been processed, push the next child onto the stack.
+        if child_index < len(children):
+            child = children[child_index]
+            current['child_index'] += 1  # increment the child index for the current node
+            stack.append({
+                'node': child,
+                'children': child.orthologGroups + child.paralogGroups,
+                'child_index': 0,
+                'child_gene_refs_list': []
+            })
+        else:
+            # All children for this node have been processed.
+            # Combine the geneRefs of the current node with the geneRefs from all children.
+            cur_gene_refs = list(node.geneRefs)  # starting with the current node's gene references
+            for child_refs in current['child_gene_refs_list']:
+                cur_gene_refs.extend(child_refs)
+            
+            # Only yield pairs if the current node is NOT a ParalogGroup.
+            if not isinstance(node, ParalogGroup):
+                # 1. Pair each geneRef in the current node with each geneRef from each child branch.
+                for branch_refs in current['child_gene_refs_list']:
+                    for r in node.geneRefs:
+                        for s in branch_refs:
+                            yield (r, s)
+                            
+                # 2. Pair geneRefs from different child branches.
+                branch_lists = current['child_gene_refs_list']
+                for i in range(len(branch_lists)):
+                    for j in range(i + 1, len(branch_lists)):
+                        for r in branch_lists[i]:
+                            for s in branch_lists[j]:
+                                yield (r, s)
+                                
+                # 3. Pair geneRefs within the current node itself.
+                own_refs = list(node.geneRefs)
+                for i in range(len(own_refs)):
+                    for j in range(i + 1, len(own_refs)):
+                        yield (own_refs[i], own_refs[j])
+            
+            # Finished processing the current node; pop the frame off the stack.
+            stack.pop()
+            
+            # If there is a parent frame, add the aggregated gene references for the current node
+            # to the parent's 'child_gene_refs_list'. This passes the information upward.
+            if stack:
+                stack[-1]['child_gene_refs_list'].append(cur_gene_refs)
+
 
 def get_ortho_pairs_recursive(node: OrthologGroup) -> tuple[list[str], list[(str, str)]]:
     """

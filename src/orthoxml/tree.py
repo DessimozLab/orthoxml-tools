@@ -6,7 +6,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml, filter_by_score
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
-from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ogs, compute_gene_counts_per_level, OrthoxmlToNewick
+from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ortho_pairs_iterative, get_ogs, compute_gene_counts_per_level, OrthoxmlToNewick
 
 class OrthoXMLTree:
     def __init__(
@@ -238,6 +238,35 @@ class OrthoXMLTree:
                 f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
 
         return pairs
+    
+    def to_ortho_pairs_iter(self, filepath=None, sep=","):
+        """
+        Generator-based method that traverses all groups in self.groups (assuming they come
+        from a tree of gene groups) and yields valid ortholog pairs.
+        
+        If a filepath is provided, the pairs are written to the file as they are generated.
+        Otherwise, a generator is returned.
+        
+        Args:
+        filepath (str): Optional file path to which the pairs should be written.
+        sep (str): Separator used when writing pairs to a file.
+        
+        Returns:
+        If no filepath is provided, returns a generator that yields tuples (geneRef1, geneRef2).
+        """
+        def pair_generator():
+            for group in self.groups:
+                if isinstance(group, OrthologGroup):
+                    yield from get_ortho_pairs_iterative(group)
+        
+        if filepath:
+            with open(filepath, "w") as f:
+                for a, b in pair_generator():
+                    f.write(f"{a}{sep}{b}\n")
+            # Optionally return nothing or a status.
+            return
+        else:
+            return pair_generator()
     
     def to_ortho_pairs_of_gene(self, gene_id: str, filepath=None, sep=",") -> list[(str, str)]:
         """
