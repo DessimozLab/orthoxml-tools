@@ -182,6 +182,98 @@ def get_paralog_pairs_recursive(node: OrthologGroup) -> tuple[list[str], list[(s
     return gene_refs, pairs
 
 
+def get_maximal_og(group: OrthologGroup, species_dic: dict[str, str]) -> list[str]:
+    """
+    Given a tree of OrthologGroup (and ParalogGroup) nodes, process any duplication events by
+    keeping only the branch (child group) that has the largest number of distinct species, and then
+    return a list of gene references (leaves) that remain.
+    
+    The function uses a global species_dic mapping gene names (after adjusting if they start with "no_")
+    to species names.
+    
+    Assumptions:
+      - A node is considered a leaf if it has no children (i.e. both orthologGroups and paralogGroups are empty).
+      - A duplication event is indicated by a node having an attribute Ev set to "duplication".
+      - Gene references in a node are stored in the list geneRefs.
+    """
+    # TODO: remove species_dic
+
+    excluded_genes = set()
+    
+    def is_leaf(node) -> bool:
+        """Return True if the node has no children groups."""
+        return not (node.orthologGroups or node.paralogGroups)
+    
+    def traverse_nodes(node):
+        """Generator to yield nodes in pre-order (current node then all children)."""
+        yield node
+        for child in node.orthologGroups:
+            yield from traverse_nodes(child)
+        for child in node.paralogGroups:
+            yield from traverse_nodes(child)
+    
+    # First pass: mark (exclude) gene leaves for non-maximal children of duplication events.
+    for node in traverse_nodes(group):
+        # Check if the node is internal and a duplication event.
+        if not is_leaf(node) and isinstance(node, ParalogGroup):
+            # For children we combine both the ortholog and paralog children.
+            children = node.orthologGroups + node.paralogGroups
+            list_num_species = []
+            # Evaluate distinct species counts for each child branch.
+            for child in children:
+                species_set = set()
+                # Use the convenience function get_all_leaves() to fetch gene ids from the child
+                for gene in child.get_all_leaves():
+                    if gene in species_dic:
+                        species_set.add(species_dic[gene])
+                    else:
+                        print("species not in the dic", gene)
+                list_num_species.append(len(species_set))
+            # Optionally, warn about potential polytomy (more than one child has the same maximum species count).
+            if list_num_species.count(max(list_num_species)) > 1:
+                print("Polytomy detected: more than one child has the maximal number of species.")
+            
+            # Choose the child with the maximum number of species.
+            if children:
+                max_species = max(list_num_species)
+                index_max = list_num_species.index(max_species)
+                # For all children other than the one selected, exclude all their gene leaves.
+                for i, child in enumerate(children):
+                    if i != index_max:
+                        for gene in child.get_all_leaves():
+                            excluded_genes.add(gene)
+            if node.geneRefs:
+                for gene in node.geneRefs:
+                    excluded_genes.add(gene)
+
+        if is_leaf(node) and isinstance(node, ParalogGroup):
+            # handle paralog groups without ortholog or paralog groups and only generefs
+            # Keep the first gene and remove the rest
+            for gene in node.geneRefs[1:]:
+                excluded_genes.add(gene)
+
+    
+    def collect_leaves(node) -> list[str]:
+        """
+        Recursively collect gene references from the tree that have not been marked as excluded.
+        """
+        leaves = []
+        # Add gene references from the current node if they have not been excluded.
+        for gene in node.geneRefs:
+            if gene not in excluded_genes:
+                leaves.append(gene)
+        # Recurse into the children groups.
+        for child in node.orthologGroups:
+            leaves.extend(collect_leaves(child))
+        for child in node.paralogGroups:
+            leaves.extend(collect_leaves(child))
+        return leaves
+
+    # The list of maximal ortholog gene references is just the collection
+    # of all leaves (geneRefs) from the tree that were not excluded.
+    return collect_leaves(group)
+
+
 def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
     """
     Given a list of valid gene pairs, return a dictionary mapping of representative gene to the orthologous group genes.
@@ -191,6 +283,7 @@ def get_ogs(pairs: list[(str, str)]) -> dict[str, list[str]]:
 
     :return: A dictionary of representative gene to orthologous group genes.
     """
+    raise Warning("This algorithm behaves not as expected!")
     # Create Union-Find structure
     uf = UnionFind()
 

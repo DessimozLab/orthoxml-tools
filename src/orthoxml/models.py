@@ -149,18 +149,34 @@ class ParalogGroup:
         self.paralogGroups = paralogGroups or []  # list of ParalogGroup objects  
 
     def __repr__(self):
-        return f"ParalogGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})"
+        return (f"ParalogGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, "
+                f"orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})")
     
     def __len__(self):
-        # TODO
-        return 0
+        # Return the total number of leaves (geneRefs) for this node and its children.
+        return len(self.get_all_leaves())
     
+    def get_all_leaves(self):
+        """
+        Recursively collect gene references (leaves) from self and all descendant groups.
+        Returns:
+            A list of gene id strings from this group and all child groups.
+        """
+        leaves = list(self.geneRefs)  # Start with geneRefs for this group.
+        # Recurse into ortholog groups.
+        for subgroup in self.orthologGroups:
+            leaves.extend(subgroup.get_all_leaves())
+        # Recurse into paralog groups.
+        for paralog in self.paralogGroups:
+            leaves.extend(paralog.get_all_leaves())
+        return leaves
+
     @classmethod
     def from_xml(cls, xml_element) -> "ParalogGroup":
         # xml_element is a <paralogGroup> element.
         taxonId = xml_element.get("taxonId")
         geneRefs = []
-        subgroups = []
+        orthologGroups = []
         paralogGroups = []
         # Process child elements.
         for child in xml_element:
@@ -168,20 +184,22 @@ class ParalogGroup:
             if tag == "geneRef":
                 geneRefs.append(child.get("id"))
             elif tag == "orthologGroup":
-                subgroups.append(OrthologGroup.from_xml(child))
+                orthologGroups.append(OrthologGroup.from_xml(child))
             elif tag == "paralogGroup":
                 paralogGroups.append(ParalogGroup.from_xml(child))
-        return cls(taxonId, geneRefs, subgroups, paralogGroups)
+        return cls(taxonId, geneRefs, orthologGroups, paralogGroups)
     
     def to_xml(self) -> etree.Element:
         group_el = etree.Element(f"{{{ORTHO_NS}}}paralogGroup")
         if self.taxonId:
             group_el.set("taxonId", self.taxonId)
-        # Note: If order matters you may want to store children in a single list.
-        for subgroup in self.subgroups:
+        # Append ortholog group children.
+        for subgroup in self.orthologGroups:
             group_el.append(subgroup.to_xml())
+        # Append paralog group children.
         for paralog in self.paralogGroups:
             group_el.append(paralog.to_xml())
+        # Append gene reference elements.
         for geneRef in self.geneRefs:
             gene_ref_el = etree.SubElement(group_el, f"{{{ORTHO_NS}}}geneRef")
             gene_ref_el.set("id", geneRef)
@@ -197,18 +215,34 @@ class OrthologGroup:
         self.paralogGroups = paralogGroups or []  # list of ParalogGroup objects
 
     def __repr__(self):
-        return f"OrthologGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})"
+        return (f"OrthologGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, "
+                f"orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})")
 
     def __len__(self):
-        # TODO
-        return 0
+        # Return the total number of leaves (geneRefs) for this node and its children.
+        return len(self.get_all_leaves())
     
+    def get_all_leaves(self):
+        """
+        Recursively collect gene references (leaves) from self and all descendant groups.
+        Returns:
+            A list of gene id strings from this group and all child groups.
+        """
+        leaves = list(self.geneRefs)
+        # Recurse into ortholog groups.
+        for subgroup in self.orthologGroups:
+            leaves.extend(subgroup.get_all_leaves())
+        # Recurse into paralog groups.
+        for paralog in self.paralogGroups:
+            leaves.extend(paralog.get_all_leaves())
+        return leaves
+
     @classmethod
     def from_xml(cls, xml_element) -> "OrthologGroup":
         # xml_element is an <orthologGroup> element.
         taxonId = xml_element.get("taxonId")
         geneRefs = []
-        subgroups = []
+        orthologGroups = []
         paralogGroups = []
         # Process child elements.
         for child in xml_element:
@@ -216,20 +250,22 @@ class OrthologGroup:
             if tag == "geneRef":
                 geneRefs.append(child.get("id"))
             elif tag == "orthologGroup":
-                subgroups.append(OrthologGroup.from_xml(child))
+                orthologGroups.append(OrthologGroup.from_xml(child))
             elif tag == "paralogGroup":
                 paralogGroups.append(ParalogGroup.from_xml(child))
-        return cls(taxonId, geneRefs, subgroups, paralogGroups)
+        return cls(taxonId, geneRefs, orthologGroups, paralogGroups)
 
     def to_xml(self) -> etree.Element:
         group_el = etree.Element(f"{{{ORTHO_NS}}}orthologGroup")
         if self.taxonId:
             group_el.set("taxonId", self.taxonId)
-        # Note: If order matters you may want to store children in a single list.
-        for subgroup in self.subgroups:
+        # Append ortholog group children.
+        for subgroup in self.orthologGroups:
             group_el.append(subgroup.to_xml())
+        # Append paralog group children.
         for paralog in self.paralogGroups:
             group_el.append(paralog.to_xml())
+        # Append gene reference elements.
         for geneRef in self.geneRefs:
             gene_ref_el = etree.SubElement(group_el, f"{{{ORTHO_NS}}}geneRef")
             gene_ref_el.set("id", geneRef)

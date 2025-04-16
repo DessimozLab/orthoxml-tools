@@ -6,7 +6,7 @@ from .loaders import load_orthoxml_file, parse_orthoxml, filter_by_score
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
-from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ortho_pairs_iterative, get_ogs, compute_gene_counts_per_level, OrthoxmlToNewick
+from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ortho_pairs_iterative, get_maximal_og, compute_gene_counts_per_level, OrthoxmlToNewick
 
 class OrthoXMLTree:
     def __init__(
@@ -350,15 +350,18 @@ class OrthoXMLTree:
         Returns:
             dict[str, list[str]]: Dictionary of orthologous groups
         """
-        pairs = self.to_ortho_pairs()
-        ogs = get_ogs(pairs)
+        species_dic = {}
+        for species in self.species:
+            for gene in species.genes:
+                species_dic[gene._id] = species.name
+        
+        max_ogs = []
 
-        if filepath:
-            with open(filepath, "w") as f:
-                for _, genes in ogs.items():
-                    f.write(f"{sep.join(genes)}\n")
+        for group in self.groups:
+            if isinstance(group, OrthologGroup):
+                max_ogs.append(get_maximal_og(group, species_dic))
 
-        return ogs
+        return max_ogs
 
     def to_gene_tree(self, xref_tag="protId", encode_levels_as_nhx=False, return_gene_to_species=False, filepath=None):
         """Convert all HOGs from an orthoxml file into newick trees using a fully loaded etree.
