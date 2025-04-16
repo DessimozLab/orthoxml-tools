@@ -340,7 +340,7 @@ class OrthoXMLTree:
         
         return pairs
 
-    def to_ogs(self, filepath=None, sep=",") -> dict[str, list[str]]:
+    def to_ogs(self, filepath=None) -> list[list[str]]:
         """
         First creates the list of ortholog pairs using self.to_ortho_pairs() then
         return a dictionary mapping of representative gene to the orthologous group genes.
@@ -361,6 +361,10 @@ class OrthoXMLTree:
             if isinstance(group, OrthologGroup):
                 max_ogs.append(get_maximal_og(group, species_dic))
 
+        if filepath:
+            for i, og in enumerate(max_ogs):
+                with open(filepath+f"_{i}.OG", "w") as f:
+                    f.writelines(f"{gene}\n" for gene in og) 
         return max_ogs
 
     def to_gene_tree(self, xref_tag="protId", encode_levels_as_nhx=False, return_gene_to_species=False, filepath=None):
