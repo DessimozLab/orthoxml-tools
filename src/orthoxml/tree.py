@@ -342,13 +342,12 @@ class OrthoXMLTree:
 
     def to_ogs(self, filepath=None) -> list[list[str]]:
         """
-        First creates the list of ortholog pairs using self.to_ortho_pairs() then
-        return a dictionary mapping of representative gene to the orthologous group genes.
+        Find the maximal OGs for each rHOGs.
 
         Args:
             filepath: Path to write the pairs to
         Returns:
-            dict[str, list[str]]: Dictionary of orthologous groups
+            list[list[str]: list of maximal ogs for each rHOG
         """
         species_dic = {}
         for species in self.species:
