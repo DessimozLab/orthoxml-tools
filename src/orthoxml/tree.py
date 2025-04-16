@@ -363,7 +363,7 @@ class OrthoXMLTree:
 
         if filepath:
             for i, og in enumerate(max_ogs):
-                with open(filepath+f"_{i}.OG", "w") as f:
+                with open(f"OG_{i}_"+filepath, "w") as f:
                     f.writelines(f"{gene}\n" for gene in og) 
         return max_ogs
 
