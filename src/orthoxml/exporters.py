@@ -1,6 +1,7 @@
 # exporters.py
 
 from .models import OrthologGroup, ParalogGroup, UnionFind, Taxon, Species
+from .logger import logger
 
 def get_ortho_pairs_iterative(root):
     """
@@ -231,7 +232,7 @@ def get_maximal_og(group: OrthologGroup, species_dic: dict[str, str]) -> list[st
                 list_num_species.append(len(species_set))
             # Optionally, warn about potential polytomy (more than one child has the same maximum species count).
             if list_num_species.count(max(list_num_species)) > 1:
-                print("Polytomy detected: more than one child has the maximal number of species.")
+                logger.debug(f"Polytomy detected: more than one child has the maximal number of species. node: {node}, list: {list_num_species}")
             
             # Choose the child with the maximum number of species.
             if children:
