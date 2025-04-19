@@ -434,7 +434,7 @@ class OrthoxmlToNewick:
             self.cur_event.add_child(leaf_cls(*self.gene2xref[attrib['id']]))
         elif tag == "{http://orthoXML.org/2011/}orthologGroup":
             if self.depth == 0:
-                self.famid = attrib['id']
+                self.famid = attrib.get('id', f"family_{len(self.trees.keys()) + 1}")
             speciation_cls = NHXSpeciation if self._use_nhx else Speciation
             self.cur_event = speciation_cls(self.cur_event)
             self.depth += 1
