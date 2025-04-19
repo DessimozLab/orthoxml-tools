@@ -228,7 +228,7 @@ def get_maximal_og(group: OrthologGroup, species_dic: dict[str, str]) -> list[st
                     if gene in species_dic:
                         species_set.add(species_dic[gene])
                     else:
-                        print("species not in the dic", gene)
+                        logger.debug(f"species not in the dic {gene}")
                 list_num_species.append(len(species_set))
             # Optionally, warn about potential polytomy (more than one child has the same maximum species count).
             if list_num_species.count(max(list_num_species)) > 1:
