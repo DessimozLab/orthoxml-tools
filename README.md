@@ -17,7 +17,7 @@ pip install orthoxml
 
 ```python
 >>> from orthoxml import OrthoXMLTree
->>> otree = OrthoXMLTree.from_file("data/orthoxml.xml", validate=True)
+>>> otree = OrthoXMLTree.from_file("data/sample.orthoxml", validate=True)
 >>> otree
 2025-02-11 11:43:17 - loaders - INFO - OrthoXML file is valid for version 0.5
 OrthoXMLTree(genes=[5 genes], species=[3 species], groups=[0 groups], taxonomy=[0 taxons], orthoxml_version=0.5)
@@ -26,7 +26,7 @@ OrthoXMLTree(genes=[5 genes], species=[3 species], groups=[0 groups], taxonomy=[
 ### Filter Based on CompletenessScore at Loading
 ```python
 >>> from orthoxml import OrthoXMLTree
->>> otree = OrthoXMLTree.from_file("data/orthoxml.xml", CompletenessScore_threshold=0.95, validate=True)
+>>> otree = OrthoXMLTree.from_file("data/sample.orthoxml", CompletenessScore_threshold=0.95, validate=True)
 >>> otree
 2025-02-11 11:43:17 - loaders - INFO - OrthoXML file is valid for version 0.5
 OrthoXMLTree(genes=[5 genes], species=[3 species], groups=[0 groups], taxonomy=[0 taxons], orthoxml_version=0.5)
@@ -133,13 +133,13 @@ OrthologGroup(taxonId=1, geneRefs=['1000000002'], orthologGroups=[OrthologGroup(
 
 ```python
 >>> otree.to_ogs()
-{'1000000002': ['1001000001', '1002000001', '1000000002'],
- '1000000003': ['1001000002', '1002000002', '1000000003'],
- '1000000004': ['1001000003', '1002000003', '1000000004']}
+[['1000000002', '1001000001', '1002000001'],
+ ['1000000003', '1001000002', '1002000002'],
+ ['1000000004', '1001000003', '1002000003']]
 >>> otree.to_ogs(filepath="out.csv") # to also writes the groups to file
-{'1000000002': ['1001000001', '1002000001', '1000000002'],
- '1000000003': ['1001000002', '1002000002', '1000000003'],
- '1000000004': ['1001000003', '1002000003', '1000000004']}
+[['1000000002', '1001000001', '1002000001'],
+ ['1000000003', '1001000002', '1002000002'],
+ ['1000000004', '1001000003', '1002000003']]
 ```
 
 # Usage from CLI
