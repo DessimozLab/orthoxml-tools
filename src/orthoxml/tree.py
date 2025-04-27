@@ -188,13 +188,25 @@ class OrthoXMLTree:
             genes_subset = {k: v for k, v in self.genes.items() if k in hog_leaves}
             
             # Pruning the species
-            # TODO
+            species_subset = []
+            for species in self.species:
+                species_genes_in_subset = []
+                for gene in species.genes:
+                    if gene._id in genes_subset:
+                        species_genes_in_subset.append(gene)
+                if species_genes_in_subset:
+                    species_subset.append(Species(
+                        name=species.name,
+                        genes=species_genes_in_subset,
+                        taxonId=species.taxonId,
+                        NCBITaxId = species.NCBITaxId
+                    ))
             # Pruning the taxonomy
             # TODO
 
             trees.append(OrthoXMLTree(
                 genes=genes_subset,
-                species=self.species,
+                species=species_subset,
                 groups=[hog],
                 taxonomy=self.taxonomy,
                 xml_tree=self.xml_tree,
