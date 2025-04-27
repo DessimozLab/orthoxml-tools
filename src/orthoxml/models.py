@@ -82,8 +82,9 @@ class Taxon:
         return f"Taxon(id={self.id}, name={self.name}, children={self.children})"
 
     def __len__(self):
-        # TODO
-        return 0
+        if not self.children:
+            return 1
+        return sum(len(child) for child in self.children)
     
     @classmethod
     def from_xml(cls, xml_element) -> "Taxon":
