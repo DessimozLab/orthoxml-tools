@@ -171,10 +171,14 @@ class OrthoXMLTree:
         except Exception as e:
             raise OrthoXMLParsingError(f"Error parsing OrthoXML: {str(e)}") from e
 
-    def split_by_rootHOGs(self) -> list["OrthoXMLTree"]:
+    def split_by_rootHOGs(self, prune_genes=True, prune_species=True, prune_taxonomy=False) -> list["OrthoXMLTree"]:
         """
         Split the current OrthoXMLTree into multiple trees based on the root HOGs.
 
+        Params:
+            prune_genes: Whether to prune genes not in the root HOGs (default: True)
+            prune_species: Whether to prune species not in the root HOGs (default: True)
+            prune_taxonomy: Whether to prune taxonomy not in the root HOGs (default: False)
         Returns:
             list[OrthoXMLTree]: List of OrthoXMLTree instances created from the root HOGs.
         """
@@ -183,32 +187,46 @@ class OrthoXMLTree:
 
         trees = []
         for hog in root_hogs:
-            # Pruning the genes
-            hog_leaves = hog.get_all_leaves()
-            genes_subset = {k: v for k, v in self.genes.items() if k in hog_leaves}
+            if prune_genes:
+                # Pruning the genes
+                hog_leaves = hog.get_all_leaves()
+                genes_subset = {k: v for k, v in self.genes.items() if k in hog_leaves}
+            else:
+                # Use the original genes
+                genes_subset = self.genes
+
+            if prune_species:
+                # Pruning the species
+                species_subset = []
+                for species in self.species:
+                    species_genes_in_subset = []
+                    for gene in species.genes:
+                        if gene._id in genes_subset:
+                            species_genes_in_subset.append(gene)
+                    if species_genes_in_subset:
+                        species_subset.append(Species(
+                            name=species.name,
+                            genes=species_genes_in_subset,
+                            taxonId=species.taxonId,
+                            NCBITaxId = species.NCBITaxId
+                        ))
+            else:
+                # Use the original species
+                species_subset = self.species
             
-            # Pruning the species
-            species_subset = []
-            for species in self.species:
-                species_genes_in_subset = []
-                for gene in species.genes:
-                    if gene._id in genes_subset:
-                        species_genes_in_subset.append(gene)
-                if species_genes_in_subset:
-                    species_subset.append(Species(
-                        name=species.name,
-                        genes=species_genes_in_subset,
-                        taxonId=species.taxonId,
-                        NCBITaxId = species.NCBITaxId
-                    ))
-            # Pruning the taxonomy
-            # TODO
+            if prune_taxonomy:
+                # Pruning the taxonomy
+                # TODO
+                raise(NotImplementedError("Pruning taxonomy is not yet implemented."))
+            else:
+                # Use the original taxonomy
+                taxonomy = self.taxonomy
 
             trees.append(OrthoXMLTree(
                 genes=genes_subset,
                 species=species_subset,
                 groups=[hog],
-                taxonomy=self.taxonomy,
+                taxonomy=taxonomy,
                 xml_tree=self.xml_tree,
                 orthoxml_version=self.orthoxml_version
             ))
