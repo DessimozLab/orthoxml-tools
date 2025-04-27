@@ -205,7 +205,6 @@ class ParalogGroup:
             gene_ref_el.set("id", geneRef)
         return group_el
 
-
 class OrthologGroup:
     __slots__ = ["taxonId", "geneRefs", "orthologGroups", "paralogGroups"]
     def __init__(self, taxonId=None, geneRefs=None, orthologGroups=None, paralogGroups=None):

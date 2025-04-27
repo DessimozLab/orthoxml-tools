@@ -29,7 +29,8 @@ class OrthoXMLTree:
         return f"OrthoXMLTree(genes={self.genes}, species={self.species}, groups={self.groups}, taxonomy={self.taxonomy}, orthoxml_version={self.orthoxml_version})"
         
     def __repr__(self) -> str:
-        return f"OrthoXMLTree(genes=[{len(self.genes)} genes], species=[{len(self.species)} species], groups=[{len(self.groups)} groups], taxonomy=[{len(self.taxonomy)} taxons], orthoxml_version={self.orthoxml_version})"
+        number_of_rHOGs = len([g for g in self.groups if isinstance(g, OrthologGroup)])
+        return f"OrthoXMLTree(genes=[{len(self.genes)} genes], species=[{len(self.species)} species], groups(number of rHOGs)=[{number_of_rHOGs} rHOGs], taxonomy=[{len(self.taxonomy)} taxons], orthoxml_version={self.orthoxml_version})"
     
     def base_stats(self) -> dict:
         """
@@ -180,13 +181,21 @@ class OrthoXMLTree:
         # Identify root HOGs: OrthologGroups with no parent.
         root_hogs = [g for g in self.groups if isinstance(g, OrthologGroup)]
 
-        ## TODO: update the genes and species and taxonomy to reflect the new tree
         trees = []
         for hog in root_hogs:
+            # Pruning the genes
+            hog_leaves = hog.get_all_leaves()
+            genes_subset = {k: v for k, v in self.genes.items() if k in hog_leaves}
+            
+            # Pruning the species
+            # TODO
+            # Pruning the taxonomy
+            # TODO
+
             trees.append(OrthoXMLTree(
-                genes=self.genes,
+                genes=genes_subset,
                 species=self.species,
-                groups=hog,
+                groups=[hog],
                 taxonomy=self.taxonomy,
                 xml_tree=self.xml_tree,
                 orthoxml_version=self.orthoxml_version
