@@ -142,6 +142,20 @@ OrthologGroup(taxonId=1, geneRefs=['1000000002'], orthologGroups=[OrthologGroup(
  ['1000000004', '1001000003', '1002000003']]
 ```
 
+### Export Options
+
+* **Export Back Manipulated Tree to OrthoXML**
+
+```python
+>>> otree.to_orthoxml()
+<?xml version='1.0' encoding='utf-8'?>
+<orthoXML xmlns="http://orthoXML.org/2011/" version="0.5" origin="orthoXML.org" originVersion="1.0">
+  <species name="Homo sapiens" NCBITaxId="9606">
+...
+  </groups>
+</orthoXML>
+```
+
 # Usage from CLI
 The `orthoxml-tools` package also provides a command-line interface for working with OrthoXML files. For more information on it checkout [CLI-README.md](./CLI-README.md)
 
