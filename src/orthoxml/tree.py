@@ -5,7 +5,7 @@ from typing import Union
 from .loaders import load_orthoxml_file, parse_orthoxml, filter_by_score
 from .exceptions import OrthoXMLParsingError
 from lxml import etree
-from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon
+from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon, ORTHO_NS, NSMAP
 from .exporters import get_ortho_pairs_recursive, get_paralog_pairs_recursive, get_ortho_pairs_iterative, get_maximal_og, compute_gene_counts_per_level, OrthoxmlToNewick
 
 class OrthoXMLTree:
@@ -232,28 +232,78 @@ class OrthoXMLTree:
             ))
         return trees
 
-    def to_orthoxml(self, filepath=None, pretty=True, use_source_tree=True) -> str:
+
+    def to_orthoxml(
+        self,
+        filepath: str = None,
+        pretty: bool = True,
+        origin: str = "orthoXML.org",
+        origin_version: str = "1.0"
+    ) -> str:
         """
-        Serialize the OrthoXMLTree to an OrthoXML file.
+        Serialize the current OrthoXMLTree into a brand-new OrthoXML string (or file).
 
         Args:
-            filepath: Path to write the OrthoXML file
-            pretty: Pretty-print the XML output (default: True)
-            use_source_tree: Use the source XML tree to generate the output (default: False)
+            filepath: if given, write bytes to this path and return None
+            pretty: pretty-print with indentation
+            origin: value for the root @origin attribute
+            origin_version: value for the root @originVersion attribute
 
         Returns:
-            str: OrthoXML file content
+            The OrthoXML document as a Unicode string (if filepath is None).
         """
-        if use_source_tree:
-            xml_tree = self.xml_tree
-        else:
-            raise NotImplementedError("Generating OrthoXML from scratch is not yet supported. Please use with use_source_tree=True.")
-        
+        # Create root <orthoXML> element
+        root = etree.Element(
+            f"{{{ORTHO_NS}}}orthoXML",
+            nsmap=NSMAP,
+            version=self.orthoxml_version or "",
+            origin=origin,
+            originVersion=origin_version
+        )
+
+        # Append all <species> blocks
+        for sp in self.species:
+            # species.to_xml() already builds <species><database>… structure
+            root.append(sp.to_xml())
+
+        # Build <taxonomy> … </taxonomy>
+        tax_el = etree.Element(f"{{{ORTHO_NS}}}taxonomy")
+        tax_el.append(self.taxonomy.to_xml())
+        root.append(tax_el)
+
+        # Build <groups> … </groups>
+        groups_el = etree.Element(f"{{{ORTHO_NS}}}groups")
+        for grp in self.groups:
+            if isinstance(grp, (OrthologGroup, ParalogGroup)):
+                groups_el.append(grp.to_xml())
+
+            elif isinstance(grp, Gene):
+                # top-level geneRef → <geneRef id="…"/>
+                gr = etree.Element(f"{{{ORTHO_NS}}}geneRef")
+                gr.set("id", grp._id)
+                groups_el.append(gr)
+
+            else:
+                raise TypeError(
+                    f"Cannot serialize group element of type {type(grp)}: {grp}"
+                )
+
+        root.append(groups_el)
+
+        # Serialize to bytes (with XML declaration)
+        xml_bytes = etree.tostring(
+            root,
+            pretty_print=pretty,
+            xml_declaration=True,
+            encoding="utf-8"
+        )
+
         if filepath:
             with open(filepath, "wb") as f:
-                f.write(etree.tostring(xml_tree, pretty_print=pretty))
-        else:
-            return etree.tostring(xml_tree, pretty_print=pretty).decode()
+                f.write(xml_bytes)
+            return None
+
+        return xml_bytes.decode("utf-8")
 
     def to_ortho_pairs(self, filepath=None, sep=",") -> list[(str, str)]:
         """
@@ -354,7 +404,6 @@ class OrthoXMLTree:
                 f.writelines(f"{a}{sep}{b}\n" for a, b in pairs)
         
         return pairs
-
 
     def to_paralog_pairs_of_gene(self, gene_id: str, filepath=None, sep=",") -> list[(str, str)]:
         """

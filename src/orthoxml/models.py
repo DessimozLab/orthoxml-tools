@@ -36,6 +36,7 @@ class Species:
         species_el.set("NCBITaxId", self.NCBITaxId)
         # Create a <database> element (adjust these attributes as needed).
         database_el = etree.SubElement(species_el, f"{{{ORTHO_NS}}}database")
+        # TODO: fix the database name
         database_el.set("name", "someDB")
         database_el.set("version", "42")
         genes_el = etree.SubElement(database_el, f"{{{ORTHO_NS}}}genes")
