@@ -232,7 +232,6 @@ class OrthoXMLTree:
             ))
         return trees
 
-
     def to_orthoxml(
         self,
         filepath: str = None,

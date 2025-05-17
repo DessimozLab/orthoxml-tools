@@ -14,16 +14,19 @@ logger = get_logger(__name__)
 
 def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTree:
     """
-    Load an OrthoXML file from disk.
+    Load an OrthoXML file from disk, removing all XML comments.
     
     :param filepath: Path to the OrthoXML file.
+    :param validate: If True, run schema validation after parsing.
     :return: An instance of the XML tree.
+    :raises OrthoXMLParsingError: If file is missing, unparsable, or fails validation.
     """
     if not os.path.exists(filepath):
         raise OrthoXMLParsingError(f"OrthoXML file not found: {filepath}")
-    
+
     try:
-        tree = etree.parse(filepath)
+        parser = etree.XMLParser(remove_comments=True)
+        tree = etree.parse(filepath, parser)
     except Exception as e:
         raise OrthoXMLParsingError(f"Failed to load OrthoXML file: {e}")
 
@@ -31,12 +34,14 @@ def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTr
         orthoxml_version = tree.getroot().attrib.get('version')
         
         if not validate_xml(tree, orthoxml_version):
-            raise OrthoXMLParsingError(f"OrthoXML file is not valid for version {orthoxml_version}")
-        else:
-            logger.info(f"OrthoXML file: {filepath} is valid for version {orthoxml_version}")
-            return tree
-    else:
-        return tree
+            raise OrthoXMLParsingError(
+                f"OrthoXML file is not valid for version {orthoxml_version}"
+            )
+        logger.info(
+            f"OrthoXML file '{filepath}' is valid for version {orthoxml_version}"
+        )
+
+    return tree
 
 def validate_xml(xml_tree, orthoxml_version) -> bool:
     """
