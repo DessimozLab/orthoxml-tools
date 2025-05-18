@@ -32,7 +32,7 @@ def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTr
 
     if validate:
         orthoxml_version = tree.getroot().attrib.get('version')
-        
+
         if not validate_xml(tree, orthoxml_version):
             raise OrthoXMLParsingError(
                 f"OrthoXML file is not valid for version {orthoxml_version}"
@@ -110,7 +110,7 @@ def parse_orthoxml(xml_tree) -> tuple[list[Species], Taxon, list[Union[OrthologG
 
     return species_list, taxonomy, groups, orthoxml_version
 
-def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True, keep_low_score_parents=False) -> None:
+def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True, keep_low_score_parents=False, high_child_as_rhogs=False) -> None:
     """
     Filter OrthoXML document by score. Works in-place.
 
@@ -121,10 +121,16 @@ def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True, ke
     :param score_threshold: The score threshold.
     :param skip_no_scores: If True, skip ortholog groups without scores. If False, remove them.
     :param keep_low_score_parents: If True, keep parents of low-scoring ortholog groups.
+    :param high_child_as_rhogs: If True, add high-scoring children of low-scoring ortholog groups as new ortholog groups at root.
     """
     root = xml_tree.getroot()
+    groups_root = root.find('.//{{{0}}}groups'.format(ORTHO_NS))
+    if groups_root is None:
+        raise ValueError("No groups found in the XML tree.")
     to_rem = []
+    to_append = []
     for hog in root.iterfind('.//{{{0}}}orthologGroup'.format(ORTHO_NS)):
+        hog_id = hog.get('id')
         score = hog.find('./{{{0}}}score'.format(ORTHO_NS))
         if score is None:
             if skip_no_scores:
@@ -132,18 +138,31 @@ def filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores=True, ke
             else:
                 to_rem.append(hog)
                 continue
-        if score.get('id') == score_id and float(score.get('value')) < score_threshold:
+        score_value = float(score.get('value'))
+        if score.get('id') == score_id and score_value < score_threshold:
             to_rem.append(hog)
-        if keep_low_score_parents and score.get('id') == score_id and float(score.get('value')) >= score_threshold:
+        if keep_low_score_parents and score.get('id') == score_id and score_value >= score_threshold:
             # remove all parents of this score from remove list
             for parent in hog.iterancestors():
                 if parent.tag == "{{{0}}}orthologGroup".format(ORTHO_NS):
                     if parent in to_rem:
                         to_rem.remove(parent)
+        
+        if high_child_as_rhogs and score.get('id') == score_id and score_value >= score_threshold:
+            # check if this is a child of a low-scoring ortholog group
+            for parent in hog.iterancestors():
+                if parent in to_rem:
+                    # this is a high scoring child of a low-scoring ortholog group
+                    # add this ortholog group as a new ortholog group at root
+                    to_append.append(hog)
+                    break
+    
+    for h in to_append:
+        groups_root.append(h)
 
     for h in to_rem:
         parent = h.getparent()
         if parent is not None:
             parent.remove(h)
-            if sum(c.tag == "{{{0}}}orthologGroup".format(ORTHO_NS) for c in parent) == 0:
+            if sum(c.tag == "{{{0}}}orthologGroup".format(ORTHO_NS) for c in parent) + sum(c.tag == "{{{0}}}paralogGroup".format(ORTHO_NS) for c in parent) == 0 and parent.tag != "{{{0}}}groups".format(ORTHO_NS):
                 to_rem.append(parent)

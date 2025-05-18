@@ -73,7 +73,13 @@ class OrthoXMLTree:
     def from_file(
         cls, 
         filepath: str,
-        CompletenessScore_threshold: float = None, 
+        
+        score_threshold: float = None,
+        score_id: str = None,
+        skip_no_scores: bool = False,
+        keep_low_score_parents: bool = False,
+        high_child_as_rhogs: bool = False,
+
         validate: bool = False,
     ) -> "OrthoXMLTree":
         """
@@ -81,7 +87,11 @@ class OrthoXMLTree:
 
         Args:
             filepath: Path to the OrthoXML file
-            CompletenessScore_threshold: Threshold value to filter by
+            
+            score_threshold: Threshold value to filter by score (default: None)
+            score_id: ID of the score to filter by (default: None) e.g. CompletenessScore
+            keep_low_score_parents: behavior of the filtering
+            high_child_as_rhogs: behavior of the filtering
             validate: Validate the XML file against the schema (default: False)
 
         Returns:
@@ -97,8 +107,8 @@ class OrthoXMLTree:
             # Apply the filter if specified
             # TODO: Refactor this to be able to filter after the loading too
             # TODO: Better abstraction for the name of the arg CompletenessScore_threshold
-            if CompletenessScore_threshold:
-                filter_by_score(xml_tree, "CompletenessScore", CompletenessScore_threshold)
+            if score_threshold:
+                filter_by_score(xml_tree, score_id, score_threshold, skip_no_scores, keep_low_score_parents, high_child_as_rhogs)
 
             # Parse XML elements into domain models
             species_list, taxonomy, groups, orthoxml_version = parse_orthoxml(xml_tree)
