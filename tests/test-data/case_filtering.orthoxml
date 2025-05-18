@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='utf-8'?>
+<orthoXML xmlns="http://orthoXML.org/2011/" origin="FastOMA 0.3.5+dev" originVersion="2025-02-14 16:39:57" version="0.5">
+
+  <!-- Species and genes (dummy data) -->
+  <species name="Homo sapiens" id="sp1" NCBITaxId="0">
+    <database name="UniProtKB" version="2024-01">
+      <gene id="hs1" protId="P00001" label="HS_Gene1"/>
+      <gene id="hs2" protId="P00002" label="HS_Gene2"/>
+    </database>
+  </species>
+
+  <species name="Mus musculus" id="sp2" NCBITaxId="0">
+    <database name="UniProtKB" version="2024-01">
+      <gene id="mm1" protId="Q00001" label="MM_Gene1"/>
+      <gene id="mm2" protId="Q00002" label="MM_Gene2"/>
+    </database>
+  </species>
+
+  <species name="Rattus norvegicus" id="sp3" NCBITaxId="0">
+    <database name="UniProtKB" version="2024-01">
+      <gene id="rn1" protId="R00001" label="RN_Gene1"/>
+      <gene id="rn2" protId="R00002" label="RN_Gene2"/>
+    </database>
+  </species>
+
+  <species name="Gallus gallus" id="sp4" NCBITaxId="0">
+    <database name="UniProtKB" version="2024-01">
+      <gene id="gg1" protId="G00001" label="GG_Gene1"/>
+      <gene id="gg2" protId="G00002" label="GG_Gene2"/>
+    </database>
+  </species>
+
+  <species name="Chelonia mydas" id="sp5" NCBITaxId="0">
+    <database name="UniProtKB" version="2024-01">
+      <gene id="cm1" protId="C00001" label="CM_Gene1"/>
+      <gene id="cm2" protId="C00002" label="CM_Gene2"/>
+    </database>
+  </species>
+
+  <species name="Arabidopsis thaliana" id="sp6" NCBITaxId="0">
+    <database name="UniProtKB" version="2024-01">
+      <gene id="at1" protId="A00001" label="AT_Gene1"/>
+      <gene id="at2" protId="A00002" label="AT_Gene2"/>
+    </database>
+  </species>
+
+
+  <!-- HOG groups, with nested structure under Sauria -->
+  <groups>
+    <!-- Eukaryotic HOG groups -->
+    <orthologGroup id="HOG_Eukaryota">
+      <score id="CompletenessScore" value="0.25"/>
+
+      <!-- Opistokonta -->
+      <orthologGroup id="HOG_Opistokonta">
+        <score id="CompletenessScore" value="0.3"/>
+        
+        <!-- Fungi -->
+        <orthologGroup id="HOG_Fungi">
+          <score id="CompletenessScore" value="0.06"/>
+          <geneRef id="hs1"/>
+          <geneRef id="mm1"/>
+        </orthologGroup>  
+
+        <!-- Tetrapoda -->
+        <orthologGroup id="HOG_Tetrapoda">
+          <score id="CompletenessScore" value="0.5"/>
+
+          <!-- Sauria -->
+          <orthologGroup id="HOG_Sauria">
+            <score id="CompletenessScore" value="0.23"/>
+
+            <!-- Aves -->
+            <orthologGroup id="HOG_Aves">
+              <score id="CompletenessScore" value="0.2"/>
+              <geneRef id="gg1"/>
+              <geneRef id="gg2"/>
+            </orthologGroup>
+
+            <!-- Cryptodira -->
+            <orthologGroup id="HOG_Cryptodira">
+              <score id="CompletenessScore" value="1.0"/>
+              <geneRef id="cm1"/>
+              <geneRef id="cm2"/>
+            </orthologGroup>
+          </orthologGroup>
+
+          <paralogGroup>
+            <!-- Mammals_1 -->
+            <orthologGroup id="HOG_Mammals_1">
+              <score id="CompletenessScore" value="0.75"/>
+              <!-- 1) Primates HOG -->
+                <orthologGroup id="HOG_Primates">
+                  <score id="CompletenessScore" value="0.8"/>
+                  <geneRef id="hs1"/>
+                  <geneRef id="hs2"/>
+                </orthologGroup>
+            </orthologGroup>
+
+            <!-- Mammals_2 -->
+            <orthologGroup id="HOG_Mammals_2">
+              <score id="CompletenessScore" value="0.6"/>
+              <!-- 1) Primates HOG -->
+              <orthologGroup id="HOG_Primates">
+                <score id="CompletenessScore" value="0.9"/>
+                <geneRef id="hs1"/>
+                <geneRef id="hs2"/>
+              </orthologGroup>
+              <!-- 1) Glires HOG -->
+              <orthologGroup id="HOG_Glires">
+                <score id="CompletenessScore" value="0.2"/>
+                <geneRef id="mm1"/>
+                <geneRef id="mm2"/>
+                <geneRef id="rn1"/>
+                <geneRef id="rn2"/>
+              </orthologGroup>
+            </orthologGroup>
+          </paralogGroup>
+        </orthologGroup>
+      </orthologGroup>
+
+      <!-- Viridiplantae -->
+      <orthologGroup id="HOG_Viridiplantae">
+        <score id="CompletenessScore" value="0.2"/>
+        <!-- Pentapetalea -->
+        <orthologGroup id="HOG_Pentapetalae">
+          <score id="CompletenessScore" value="0.7"/>
+          <geneRef id="at1"/>
+          <geneRef id="at2"/>
+        </orthologGroup>
+      </orthologGroup>
+
+
+    </orthologGroup>
+  </groups>
+</orthoXML>
