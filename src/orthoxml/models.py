@@ -142,17 +142,51 @@ class Taxon:
             lines.append(_child_str(child, "", i == len(self.children) - 1))
         return "\n".join(lines)
 
-class ParalogGroup:
-    __slots__ = ["taxonId", "geneRefs", "orthologGroups", "paralogGroups"]
-    def __init__(self, taxonId=None, geneRefs=None, orthologGroups=None, paralogGroups=None):
-        self.taxonId = taxonId  # optional attribute (as string)
-        self.geneRefs = geneRefs or []        # list of gene id strings
-        self.orthologGroups = orthologGroups or []      # list of OrthologGroup objects
-        self.paralogGroups = paralogGroups or []  # list of ParalogGroup objects  
+class Score:
+    __slots__ = ("key", "value")
+    def __init__(self, key: str, value: float):
+        self.key   = key
+        self.value = value
 
     def __repr__(self):
-        return (f"ParalogGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, "
-                f"orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})")
+        return f"Score(id={self.key!r}, value={self.value!r})"
+    
+    @classmethod
+    def from_xml(cls, xml_element) -> "Score":
+        # xml_element is a <score> element. e.g. <score id="CompletenessScore" value="0.25"/>
+
+        return cls(
+            key=xml_element.get("id"),
+            value=float(xml_element.get("value"))
+        )
+
+    def to_xml(self) -> etree.Element:
+        score_el = etree.Element(f"{{{ORTHO_NS}}}score")
+        score_el.set("id", self.key)
+        score_el.set("value", str(self.value))
+        return score_el
+
+class ParalogGroup:
+    __slots__ = ("id", "taxonId", "scores", "geneRefs", "orthologGroups", "paralogGroups")
+
+    def __init__(self,
+                 id: str = None,
+                 taxonId: str = None,
+                 scores: list[Score] = None,
+                 geneRefs: list[str] = None,
+                 orthologGroups: list["OrthologGroup"] = None,
+                 paralogGroups: list["ParalogGroup"] = None):
+        self.id              = id
+        self.taxonId         = taxonId
+        self.scores          = scores or []
+        self.geneRefs        = geneRefs or []
+        self.orthologGroups  = orthologGroups or []
+        self.paralogGroups   = paralogGroups or []
+
+    def __repr__(self):
+        return (f"OrthologGroup(id={self.id!r}, taxonId={self.taxonId!r}, "
+                f"scores={self.scores!r}, geneRefs={self.geneRefs!r}, "
+                f"orthologGroups={self.orthologGroups!r}, paralogGroups={self.paralogGroups!r})")
     
     def __len__(self):
         # Return the total number of leaves (geneRefs) for this node and its children.
@@ -176,10 +210,12 @@ class ParalogGroup:
     @classmethod
     def from_xml(cls, xml_element) -> "ParalogGroup":
         # xml_element is a <paralogGroup> element.
+        grp_id = xml_element.get("id")
         taxonId = xml_element.get("taxonId")
         geneRefs = []
         orthologGroups = []
         paralogGroups = []
+        scores = []
         # Process child elements.
         for child in xml_element:
             tag = etree.QName(child.tag).localname
@@ -189,12 +225,20 @@ class ParalogGroup:
                 orthologGroups.append(OrthologGroup.from_xml(child))
             elif tag == "paralogGroup":
                 paralogGroups.append(ParalogGroup.from_xml(child))
-        return cls(taxonId, geneRefs, orthologGroups, paralogGroups)
+            elif tag == "score":
+                scores.append(Score.from_xml(child))
+
+        return cls(grp_id, taxonId, scores, geneRefs, orthologGroups, paralogGroups)
     
     def to_xml(self) -> etree.Element:
         group_el = etree.Element(f"{{{ORTHO_NS}}}paralogGroup")
+        if self.id:
+            group_el.set("id", self.id)
         if self.taxonId:
             group_el.set("taxonId", self.taxonId)
+        # Append scores.
+        for score in self.scores:
+            group_el.append(score.to_xml())
         # Append ortholog group children.
         for subgroup in self.orthologGroups:
             group_el.append(subgroup.to_xml())
@@ -208,16 +252,27 @@ class ParalogGroup:
         return group_el
 
 class OrthologGroup:
-    __slots__ = ["taxonId", "geneRefs", "orthologGroups", "paralogGroups"]
-    def __init__(self, taxonId=None, geneRefs=None, orthologGroups=None, paralogGroups=None):
-        self.taxonId = taxonId  # optional attribute (as string)
-        self.geneRefs = geneRefs or []        # list of gene id strings
-        self.orthologGroups = orthologGroups or []      # list of OrthologGroup objects
-        self.paralogGroups = paralogGroups or []  # list of ParalogGroup objects
+    __slots__ = ("id", "taxonId", "scores", "geneRefs", "orthologGroups", "paralogGroups")
+
+    def __init__(self,
+                 id: str = None,
+                 taxonId: str = None,
+                 scores: list[Score] = None,
+                 geneRefs: list[str] = None,
+                 orthologGroups: list["OrthologGroup"] = None,
+                 paralogGroups: list["ParalogGroup"] = None):
+        self.id              = id
+        self.taxonId         = taxonId
+        self.scores          = scores or []
+        self.geneRefs        = geneRefs or []
+        self.orthologGroups  = orthologGroups or []
+        self.paralogGroups   = paralogGroups or []
+
 
     def __repr__(self):
-        return (f"OrthologGroup(taxonId={self.taxonId}, geneRefs={self.geneRefs}, "
-                f"orthologGroups={self.orthologGroups}, paralogGroups={self.paralogGroups})")
+        return (f"OrthologGroup(id={self.id!r}, taxonId={self.taxonId!r}, "
+                f"scores={self.scores!r}, geneRefs={self.geneRefs!r}, "
+                f"orthologGroups={self.orthologGroups!r}, paralogGroups={self.paralogGroups!r})")
 
     def __len__(self):
         # Return the total number of leaves (geneRefs) for this node and its children.
@@ -241,10 +296,12 @@ class OrthologGroup:
     @classmethod
     def from_xml(cls, xml_element) -> "OrthologGroup":
         # xml_element is an <orthologGroup> element.
+        grp_id = xml_element.get("id")
         taxonId = xml_element.get("taxonId")
         geneRefs = []
         orthologGroups = []
         paralogGroups = []
+        scores = []
         # Process child elements.
         for child in xml_element:
             tag = etree.QName(child.tag).localname
@@ -254,12 +311,19 @@ class OrthologGroup:
                 orthologGroups.append(OrthologGroup.from_xml(child))
             elif tag == "paralogGroup":
                 paralogGroups.append(ParalogGroup.from_xml(child))
-        return cls(taxonId, geneRefs, orthologGroups, paralogGroups)
+            elif tag == "score":
+                scores.append(Score.from_xml(child))
+        return cls(grp_id, taxonId, scores, geneRefs, orthologGroups, paralogGroups)
 
     def to_xml(self) -> etree.Element:
         group_el = etree.Element(f"{{{ORTHO_NS}}}orthologGroup")
+        if self.id:
+            group_el.set("id", self.id)
         if self.taxonId:
             group_el.set("taxonId", self.taxonId)
+        # Append scores.
+        for score in self.scores:
+            group_el.append(score.to_xml())
         # Append ortholog group children.
         for subgroup in self.orthologGroups:
             group_el.append(subgroup.to_xml())
