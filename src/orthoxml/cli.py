@@ -4,6 +4,8 @@ import argparse
 import sys
 from orthoxml import OrthoXMLTree
 from orthoxml import __version__
+from orthoxml.custom_parsers import BasicStats
+
 
 def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_strategy=None):
     """Load OrthoXML tree from file without applying any completeness filter."""
@@ -36,21 +38,16 @@ def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_st
         sys.exit(1)
 
 def handle_stats(args):
-    tree = load_tree(args.file, args.validate)
-    base_stats = tree.base_stats()
-    gene_stats = tree.gene_stats()
-    print("Base Stats:")
-    for key, value in base_stats.items():
-        print(f"  {key}: {value}")
-    print("\nGene Stats:")
-    for taxon_id, count in gene_stats.items():
-        print(f"  Taxon {taxon_id}: {count} genes")
-    if args.outfile:
-        with open(args.outfile, 'w') as f:
-            f.write("Metric,Value\n")
-            for key, value in base_stats.items():
-                f.write(f"{key},{value}\n")
-        print(f"\nStats written to {args.outfile}")
+    # TODO: Implement the gene stats functionality
+    # TODO: Implement the outfile functionality
+    with BasicStats(args.file) as parser:
+        for _ in parser.parse():
+            pass
+        print(f"Number of species: {parser.species_count}")
+        print(f"Number of genes: {parser.gene_count}")
+        print(f"Number of rootHOGs: {parser.rhog_count}")
+        print(f"Number of leave taxa: {parser.leave_taxon_count}")
+        print(f"Total number of taxa: {parser.all_taxa_count}")
 
 def handle_taxonomy(args):
     tree = load_tree(args.file, args.validate)
