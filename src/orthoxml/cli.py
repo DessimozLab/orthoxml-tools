@@ -3,6 +3,7 @@
 import argparse
 import sys
 from orthoxml import OrthoXMLTree
+from orthoxml import __version__
 
 def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_strategy=None):
     """Load OrthoXML tree from file without applying any completeness filter."""
@@ -106,6 +107,9 @@ def handle_filter(args):
 def main():
     parser = argparse.ArgumentParser(
         description="Command Line Interface for orthoxml-tools")
+
+    parser.add_argument("-v", "--version", action="version",
+                        version=f"%(prog)s {__version__}")
     parser.add_argument("--validate", action="store_true",
                         help="Validate the OrthoXML file")
 
