@@ -42,14 +42,12 @@ def handle_export(args):
     tree = load_tree(args.file, args.validate, args.completeness)
     if args.type == "pairs":
         pairs = tree.to_ortho_pairs(filepath=args.outfile if args.outfile else None)
-        print("Orthologous Pairs:")
         for pair in pairs:
             print(pair)
     elif args.type == "groups":
         groups = tree.to_ogs(filepath=args.outfile if args.outfile else None)
-        print("Orthologous Groups:")
-        for key, group in groups.items():
-            print(f"{key}: {group}")
+        for group in groups:
+            print(group)
     else:
         print("Unknown export type specified.")
 
