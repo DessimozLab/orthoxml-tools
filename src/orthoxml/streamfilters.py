@@ -1,3 +1,5 @@
+# streamfilters.py
+
 import abc
 import logging
 from typing import Iterable
