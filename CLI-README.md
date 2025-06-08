@@ -8,12 +8,11 @@ orthoxml FILE [options] <subcommand> [options]
 
 **Global options:**
 - `--validate`: Validate the OrthoXML file.
-- `--completeness <threshold>`: Filter entries by CompletenessScore.
-  
+
 ## Subcommands
 
 ### **stats**
-Display basic statistics and gene count per taxon.
+Display basic statistics.
 
 ```bash
 orthoxml path/to/file.xml stats 
@@ -25,6 +24,45 @@ orthoxml path/to/file.xml stats
 **Example:**
 ```bash
 orthoxml examples/data/ex1.orthoxml --validate stats --outfile stats.csv
+```
+
+### **gene-stats**
+Display statistics for gene count per taxon.
+
+```bash
+orthoxml path/to/file.xml gene-stats
+```
+
+**Options:**
+- `--outfile <file>`: Write stats to a CSV file.
+
+**Example:**
+```bash
+orthoxml examples/data/ex1.orthoxml gene-stats --outfile gene_stats.csv
+```
+
+### **filter**
+Filter orthology groups based on a specified score and threshold.
+
+```bash
+orthoxml path/to/file.xml filter --score-name <name> --threshold <value> --strategy <topdown|bottomup>
+```
+
+**Options:**
+- `--score-name <name>`: Specify the score to filter by (e.g., CompletenessScore).
+- `--threshold <value>`: Set the threshold for filtering.
+- `--strategy <topdown|bottomup>`: Choose the filtering strategy (default is `topdown`).
+- `--outfile <file>`: Save output to a file. if not specified, the output will be printed to stdout.
+
+
+**Examples:**
+```bash
+orthoxml data/test_case_2.orthoxml filter --score-name CompletenessScore --threshold 0.9 --strategy topdown 
+```
+
+with file output:
+```bash
+orthoxml data/test_case_2.orthoxml filter --score-name CompletenessScore --threshold 0.9 --strategy topdown --outfile filtered.orthoxml
 ```
 
 ### **taxonomy**
