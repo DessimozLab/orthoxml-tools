@@ -2,10 +2,13 @@
 
 import argparse
 import sys
+import json
 from orthoxml import OrthoXMLTree
 from orthoxml import __version__
-from orthoxml.custom_parsers import BasicStats
+from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats
+from orthoxml.logger import get_logger
 
+logger = get_logger(__name__)
 
 def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_strategy=None):
     """Load OrthoXML tree from file without applying any completeness filter."""
@@ -38,16 +41,28 @@ def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_st
         sys.exit(1)
 
 def handle_stats(args):
-    # TODO: Implement the gene stats functionality
-    # TODO: Implement the outfile functionality
     with BasicStats(args.file) as parser:
         for _ in parser.parse():
             pass
-        print(f"Number of species: {parser.species_count}")
-        print(f"Number of genes: {parser.gene_count}")
-        print(f"Number of rootHOGs: {parser.rhog_count}")
-        print(f"Number of leave taxa: {parser.leave_taxon_count}")
-        print(f"Total number of taxa: {parser.all_taxa_count}")
+        logger.info(f"Number of species: {parser.species_count}")
+        logger.info(f"Number of genes: {parser.gene_count}")
+        logger.info(f"Number of rootHOGs: {parser.rhog_count}")
+        logger.info(f"Number of leave taxa: {parser.leave_taxon_count}")
+        logger.info(f"Total number of taxa: {parser.all_taxa_count}")
+
+def handle_gene_stats(args):
+    with GenePerTaxonStats(args.file) as parser:
+        for _ in parser.parse():
+            pass
+        parser.compute_taxon_counts()
+        
+        if args.outfile:
+            with open(args.outfile, 'w') as outfile:
+                json.dump(parser.taxonomy_counts, outfile, indent=4)
+            logger.info(f"Gene count per taxon written to {args.outfile}")
+        else:
+            logger.info(parser.taxonomy_counts)
+
 
 def handle_taxonomy(args):
     tree = load_tree(args.file, args.validate)
@@ -118,8 +133,15 @@ def main():
 
     # Stats subcommand
     stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")
-    stats_parser.add_argument("--outfile", help="Output file to write stats")
     stats_parser.set_defaults(func=handle_stats)
+
+    # Gene Stats
+    gene_stats_parser = subparsers.add_parser("gene-stats", help="Show gene statistics of the OrthoXML tree")
+    gene_stats_parser.add_argument(
+        "--outfile",
+        help="If provided, write the gene statistics to this file; otherwise, print to stdout"
+    )
+    gene_stats_parser.set_defaults(func=handle_gene_stats)
 
     # Taxonomy subcommand
     tax_parser = subparsers.add_parser("taxonomy", help="Print the taxonomy tree")
