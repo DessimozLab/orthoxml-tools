@@ -3,7 +3,7 @@
 The `orthoxml-tools` package also provides a command-line interface for working with OrthoXML files. After installation, you can access the CLI via:
 
 ```bash
-orthoxml FILE [options] <subcommand> [options]
+orthoxml [options] <subcommand> [options]
 ```
 
 **Global options:**
@@ -15,40 +15,42 @@ orthoxml FILE [options] <subcommand> [options]
 Display basic statistics.
 
 ```bash
-orthoxml path/to/file.xml stats 
+orthoxml stats --infile path/to/file.orthoxml [--outfile <file>] 
 ```
 
 **Options:**
-- `--outfile <file>`: Write stats to a CSV file.
+- `--infile <file>`: Specify the input file (required).
 
 **Example:**
 ```bash
-orthoxml examples/data/ex1.orthoxml --validate stats --outfile stats.csv
+orthoxml stats --infile examples/data/ex1.orthoxml
 ```
 
 ### **gene-stats**
 Display statistics for gene count per taxon.
 
 ```bash
-orthoxml path/to/file.xml gene-stats
+orthoxml gene-stats --infile path/to/file.orthoxml [--outfile <file>]
 ```
 
 **Options:**
+- `--infile <file>`: Specify the input file (required).
 - `--outfile <file>`: Write stats to a CSV file.
 
 **Example:**
 ```bash
-orthoxml examples/data/ex1.orthoxml gene-stats --outfile gene_stats.csv
+orthoxml gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
 ```
 
 ### **filter**
 Filter orthology groups based on a specified score and threshold.
 
 ```bash
-orthoxml path/to/file.xml filter --score-name <name> --threshold <value> --strategy <topdown|bottomup>
+orthoxml filter --infile path/to/file.orthoxml --score-name <name> --threshold <value> --strategy <topdown|bottomup>
 ```
 
 **Options:**
+- `--infile <file>`: Specify the input file (required).
 - `--score-name <name>`: Specify the score to filter by (e.g., CompletenessScore).
 - `--threshold <value>`: Set the threshold for filtering.
 - `--strategy <topdown|bottomup>`: Choose the filtering strategy (default is `topdown`).
@@ -57,47 +59,48 @@ orthoxml path/to/file.xml filter --score-name <name> --threshold <value> --strat
 
 **Examples:**
 ```bash
-orthoxml data/test_case_2.orthoxml filter --score-name CompletenessScore --threshold 0.9 --strategy topdown 
+orthoxml filter --infile data/test_case_2.orthoxml --score-name CompletenessScore --threshold 0.9 --strategy topdown 
 ```
 
 with file output:
 ```bash
-orthoxml data/test_case_2.orthoxml filter --score-name CompletenessScore --threshold 0.9 --strategy topdown --outfile filtered.orthoxml
+orthoxml filter --infile data/test_case_2.orthoxml --score-name CompletenessScore --threshold 0.9 --strategy topdown --outfile filtered.orthoxml
 ```
 
 ### **taxonomy**
 Print a human-readable taxonomy tree from the OrthoXML file.
 
 ```bash
-orthoxml path/to/file.xml taxonomy
+orthoxml taxonomy --infile path/to/file.orthoxml
 ```
 
 **Example:**
 ```bash
-orthoxml examples/data/ex1-int-taxon.orthoxml --validate taxonomy
+orthoxml taxonomy --infile examples/data/ex1-int-taxon.orthoxml
 ```
 
 ### **export**
 Export orthology data as pairs or groups.
 
 ```bash
-orthoxml path/to/file.xml export <pairs|groups> 
+orthoxml export <pairs|groups> --infile path/to/file.orthoxml [--outfile <file>]
 ```
 
 **Options:**
+- `--infile <file>`: Specify the input file (required).
 - `--outfile <file>`: Save output to a file.
 
 **Examples:**
 ```bash
-orthoxml examples/data/ex1-int-taxon.orthoxml export pairs --outfile pairs.csv
-orthoxml examples/data/ex1-int-taxon.orthoxml --validate export groups
+orthoxml export pairs --infile examples/data/ex1-int-taxon.orthoxml  --outfile pairs.csv
+orthoxml export groups --infile examples/data/ex1-int-taxon.orthoxml
 ```
 
 ### **split**
 Split the tree into multiple trees based on rootHOGs.
 
 ```bash
-orthoxml split path/to/file.xml
+orthoxml split --infile path/to/file.orthoxml
 ```
 
 
@@ -106,5 +109,7 @@ To see help for any command:
 
 ```bash
 orthoxml --help
+orthoxml -h
 orthoxml stats --help
+orthoxml stats -h
 ```

@@ -41,7 +41,7 @@ def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_st
         sys.exit(1)
 
 def handle_stats(args):
-    with BasicStats(args.file) as parser:
+    with BasicStats(args.infile) as parser:
         for _ in parser.parse():
             pass
         logger.info(f"Number of species: {parser.species_count}")
@@ -51,7 +51,7 @@ def handle_stats(args):
         logger.info(f"Total number of taxa: {parser.all_taxa_count}")
 
 def handle_gene_stats(args):
-    with GenePerTaxonStats(args.file) as parser:
+    with GenePerTaxonStats(args.infile) as parser:
         for _ in parser.parse():
             pass
         parser.compute_taxon_counts()
@@ -65,12 +65,12 @@ def handle_gene_stats(args):
 
 
 def handle_taxonomy(args):
-    tree = load_tree(args.file, args.validate)
+    tree = load_tree(args.infile, args.validate)
     print("Taxonomy Tree:")
     print(tree.taxonomy.to_str())
 
 def handle_export(args):
-    tree = load_tree(args.file, args.validate)
+    tree = load_tree(args.infile, args.validate)
     if args.type == "pairs":
         pairs = tree.to_ortho_pairs(filepath=args.outfile if args.outfile else None)
         for pair in pairs:
@@ -83,7 +83,7 @@ def handle_export(args):
         print("Unknown export type specified.")
 
 def handle_split(args):
-    tree = load_tree(args.file, args.validate)
+    tree = load_tree(args.infile, args.validate)
     trees = tree.split_by_rootHOGs()
     print(f"Split into {len(trees)} trees based on rootHOGs.")
     for idx, t in enumerate(trees):
@@ -93,7 +93,7 @@ def handle_split(args):
 def handle_filter(args):
 
     try:
-        tree = load_tree(args.file, args.validate,
+        tree = load_tree(args.infile, args.validate,
                          score_id=args.score_name,
                          score_threshold=args.threshold,
                          filter_strategy=args.strategy)
@@ -125,18 +125,17 @@ def main():
     parser.add_argument("--validate", action="store_true",
                         help="Validate the OrthoXML file")
 
-    # Global argument for the file path
-    parser.add_argument("file", help="Path to the OrthoXML file")
-
     subparsers = parser.add_subparsers(
         title="subcommands", dest="command", required=True)
 
     # Stats subcommand
     stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")
+    stats_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     stats_parser.set_defaults(func=handle_stats)
 
     # Gene Stats
     gene_stats_parser = subparsers.add_parser("gene-stats", help="Show gene statistics of the OrthoXML tree")
+    gene_stats_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     gene_stats_parser.add_argument(
         "--outfile",
         help="If provided, write the gene statistics to this file; otherwise, print to stdout"
@@ -145,20 +144,24 @@ def main():
 
     # Taxonomy subcommand
     tax_parser = subparsers.add_parser("taxonomy", help="Print the taxonomy tree")
+    tax_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     tax_parser.set_defaults(func=handle_taxonomy)
 
     # Export subcommand
     export_parser = subparsers.add_parser("export", help="Export orthologous pairs or groups")
+    export_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     export_parser.add_argument("type", choices=["pairs", "groups"], help="Type of export")
     export_parser.add_argument("--outfile", help="Output file to write the export")
     export_parser.set_defaults(func=handle_export)
 
     # Split subcommand
     split_parser = subparsers.add_parser("split", help="Split the tree by rootHOGs")
+    split_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     split_parser.set_defaults(func=handle_split)
 
     # Filter subcommand
     filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a completeness score")
+    filter_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     filter_parser.add_argument(
         "--score-name",
         required=True,
