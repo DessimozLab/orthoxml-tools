@@ -76,7 +76,12 @@ orthoxml taxonomy --infile path/to/file.orthoxml
 
 **Example:**
 ```bash
-orthoxml taxonomy --infile examples/data/ex1-int-taxon.orthoxml
+>>> orthoxml taxonomy --infile examples/data/ex3-int-taxon.orthoxml
+Root
+├── Mus musculus
+└── Primates
+    ├── Homo sapiens
+    └── Pan troglodytes
 ```
 
 ### **export**

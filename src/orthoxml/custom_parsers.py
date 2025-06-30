@@ -3,6 +3,7 @@
 from collections import defaultdict
 from .parsers import StreamOrthoXMLParser
 from .logger import get_logger
+from .models import Taxon, ORTHO_NS
 from lxml import etree
 
 logger = get_logger(__name__)
@@ -136,3 +137,18 @@ class GenePerTaxonStats(StreamOrthoXMLParser):
             logger.warning("No taxonomy tree found. Cannot compute taxon counts.")
             return 0
         recurse(self.taxonomy_tree)
+
+class PrintTaxonomy(StreamOrthoXMLParser):
+    def __init__(self, source):
+        super().__init__(source)
+        self.taxonomy = None
+
+    def process_taxonomy(self, elem):
+        """Build an in‐memory tree of nested <taxon> elements."""
+
+        if elem is not None:
+            taxon_el = elem.find(f"{{{ORTHO_NS}}}taxon")
+            if taxon_el is not None:
+                self.taxonomy = Taxon.from_xml(taxon_el)
+
+        return None

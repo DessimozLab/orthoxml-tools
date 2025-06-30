@@ -5,7 +5,7 @@ import sys
 import json
 from orthoxml import OrthoXMLTree
 from orthoxml import __version__
-from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats
+from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy
 from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
@@ -65,9 +65,10 @@ def handle_gene_stats(args):
 
 
 def handle_taxonomy(args):
-    tree = load_tree(args.infile, args.validate)
-    print("Taxonomy Tree:")
-    print(tree.taxonomy.to_str())
+    with PrintTaxonomy(args.infile) as parser:
+        for _ in parser.parse():
+            pass
+        print(parser.taxonomy.to_str())
 
 def handle_export(args):
     tree = load_tree(args.infile, args.validate)
