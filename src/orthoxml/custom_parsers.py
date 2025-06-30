@@ -133,5 +133,6 @@ class GenePerTaxonStats(StreamOrthoXMLParser):
             return cnt
 
         if self.taxonomy_tree is None:
-            raise RuntimeError("Taxonomy not parsed!")
+            logger.warning("No taxonomy tree found. Cannot compute taxon counts.")
+            return 0
         recurse(self.taxonomy_tree)
