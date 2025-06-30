@@ -10,7 +10,7 @@ from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
 
-def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_strategy=None):
+def load_tree(filepath, validate=False, score_id=None, score_threshold=None, filter_strategy=None):
     """Load OrthoXML tree from file without applying any completeness filter."""
     try:
         if score_id and not all([score_id, score_threshold, filter_strategy]):
@@ -71,7 +71,7 @@ def handle_taxonomy(args):
         print(parser.taxonomy.to_str())
 
 def handle_export(args):
-    tree = load_tree(args.infile, args.validate)
+    tree = load_tree(args.infile)
     if args.type == "pairs":
         pairs = tree.to_ortho_pairs(filepath=args.outfile if args.outfile else None)
         for pair in pairs:
@@ -84,7 +84,7 @@ def handle_export(args):
         print("Unknown export type specified.")
 
 def handle_split(args):
-    tree = load_tree(args.infile, args.validate)
+    tree = load_tree(args.infile)
     trees = tree.split_by_rootHOGs()
     print(f"Split into {len(trees)} trees based on rootHOGs.")
     for idx, t in enumerate(trees):
@@ -94,7 +94,7 @@ def handle_split(args):
 def handle_filter(args):
 
     try:
-        tree = load_tree(args.infile, args.validate,
+        tree = load_tree(args.infile,
                          score_id=args.score_name,
                          score_threshold=args.threshold,
                          filter_strategy=args.strategy)
@@ -123,11 +123,14 @@ def main():
 
     parser.add_argument("-v", "--version", action="version",
                         version=f"%(prog)s {__version__}")
-    parser.add_argument("--validate", action="store_true",
-                        help="Validate the OrthoXML file")
 
     subparsers = parser.add_subparsers(
         title="subcommands", dest="command", required=True)
+
+    # Validate subcommand
+    validate_parser = subparsers.add_parser("validate", help="Validate an OrthoXML file")
+    validate_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    validate_parser.set_defaults(func=lambda args: load_tree(args.infile, validate=True))
 
     # Stats subcommand
     stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")

@@ -6,10 +6,22 @@ The `orthoxml-tools` package also provides a command-line interface for working 
 orthoxml [options] <subcommand> [options]
 ```
 
-**Global options:**
-- `--validate`: Validate the OrthoXML file.
-
 ## Subcommands
+
+### **validate**
+Validate an OrthoXML file against the schema version specified in the file itself.
+
+```bash
+orthoxml validate --infile path/to/file.orthoxml
+```
+
+**Options:**
+- `--infile <file>`: Specify the input file (required).
+
+**Example:**
+```bash
+orthoxml validate --infile examples/data/ex1.orthoxml
+```
 
 ### **stats**
 Display basic statistics.

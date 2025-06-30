@@ -6,6 +6,7 @@ set -u  # Treat unset variables as errors
 # Define test file paths
 EXAMPLES_DIR="examples/data"
 INFILE="$EXAMPLES_DIR/ex3-int-taxon.orthoxml"
+VALIDATE_INFILE="$EXAMPLES_DIR/ex3.orthoxml"
 OUT_GENE_STATS="tests_output/gene_stats.json"
 OUT_EXPORT_PAIRS="tests_output/export_pairs.tsv"
 OUT_FILTERED="tests_output/filtered.orthoxml"
@@ -45,5 +46,12 @@ cat "$OUT_FILTERED"
 echo -e "\n[10] Test: help commands"
 orthoxml -h
 orthoxml stats -h
+
+echo -e "\n[11] Test: version"
+orthoxml --version
+orthoxml -v
+
+echo -e "\n[12] Test: validation"
+orthoxml validate --infile "$VALIDATE_INFILE"
 
 echo -e "\nAll tests completed successfully."
