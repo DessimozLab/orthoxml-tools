@@ -98,6 +98,12 @@ def handle_split_streaming(args):
                         parser_cls=SplitterByRootHOGS,
                         parser_kwargs={"rhogs_number": rhog})
 
+def handle_conversion_to_nhx(args):
+    pass
+
+def handle_conversion_from_nhx(args):
+    pass
+
 def handle_filter(args):
 
     try:
