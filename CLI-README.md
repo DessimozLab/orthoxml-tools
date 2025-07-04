@@ -125,6 +125,25 @@ orthoxml split --infile path/to/file.orthoxml --outdir path/to/output_folder
 orthoxml split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir tests_output/splits
 ```
 
+## File Conversions
+
+### OrthoXML to Newick Tree (NHX)
+Convert OrthoXML to Newick (NHX) format.
+
+```bash
+orthoxml to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --xref-tag [geneId,protId,...]    
+```
+
+**Options:**
+- `--infile <file>`: Specify the input OrthoXML file (required).
+- `--outdir <folder>`: Specify the output folder where the NHX files will be saved (required).
+- `--xref-tag <tag>`: Specify the attribute of the `<gene>` element to use as the label for the leaves. Default is `protId`.
+
+**Example:**
+```bash
+orthoxml to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
+```
+
 
 ### **Help**
 To see help for any command:

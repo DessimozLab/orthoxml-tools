@@ -7,6 +7,7 @@ import json
 from orthoxml import OrthoXMLTree
 from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
+from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
 from orthoxml.logger import get_logger
 
@@ -99,7 +100,25 @@ def handle_split_streaming(args):
                         parser_kwargs={"rhogs_number": rhog})
 
 def handle_conversion_to_nhx(args):
-    pass
+    infile = args.infile
+    outdir = args.outdir
+    xref_tag = args.xref_tag
+
+    trees = orthoxml_to_newick(infile, xref_tag=xref_tag)
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    
+    # write trees to files
+    for treeid_hog, tree in trees.items():
+        tree_file_i = os.path.join(outdir, f"tree_{treeid_hog}.nwk")
+        logger.debug(f"Writing tree {treeid_hog} to {tree_file_i}")
+        with open(tree_file_i,'w') as handle:
+            handle.write(tree)
+        handle.close()
+
+    logger.info(f"We wrote {len(trees)} trees  in nhx format from the input HOG orthoxml {infile} in {outdir}.")
+    logger.info("You can visualise each tree using https://beta.phylo.io/viewer/ as extended newick format.")
 
 def handle_conversion_from_nhx(args):
     pass
@@ -168,9 +187,11 @@ def main():
     ## OrthoXML to Newick (NHX)
     converter_to_nhx_parser = subparsers.add_parser("to-nhx", help="Convert OrthoXML to Newick (NHX) format")
     converter_to_nhx_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    converter_to_nhx_parser.add_argument("--outdir", required=True, help="Path to the folder where the trees will be saved")
     converter_to_nhx_parser.add_argument(
-        "--outfile",
-        help="If provided, write the Newick (NHX)  tree to this file; otherwise, print to stdout"
+        "--xref-tag",
+        default="protId",
+        help="the attribute of the <gene> element that should be used to get as label for the leaves labels."
     )
     converter_to_nhx_parser.set_defaults(func=handle_conversion_to_nhx)
 
@@ -193,7 +214,7 @@ def main():
     # Split subcommand
     split_parser = subparsers.add_parser("split", help="Split the tree by rootHOGs")
     split_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    split_parser.add_argument("--outdir", required=True, help="Path to the folder the splitted rootHOGs will be saved")
+    split_parser.add_argument("--outdir", required=True, help="Path to the folder where the splitted rootHOGs will be saved")
     split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
