@@ -152,3 +152,26 @@ class PrintTaxonomy(StreamOrthoXMLParser):
                 self.taxonomy = Taxon.from_xml(taxon_el)
 
         return None
+
+
+class RootHOGCounter(StreamOrthoXMLParser):
+    def __init__(self, source, **kwargs):
+        super().__init__(source, **kwargs)
+        self.rhogs_count = 0
+
+    def process_toplevel_group(self, elem):
+        self.rhogs_count += 1
+
+        return None
+
+class SplitterByRootHOGS(StreamOrthoXMLParser):
+    def __init__(self, source, rhogs_number):
+        super().__init__(source)
+        self.rhogs_number = rhogs_number
+        self.current_rhog = 0
+
+    def process_toplevel_group(self, elem):
+        self.current_rhog += 1
+
+        if self.current_rhog == self.rhogs_number:
+            return elem

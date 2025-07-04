@@ -7,6 +7,7 @@ set -u  # Treat unset variables as errors
 EXAMPLES_DIR="examples/data"
 INFILE="$EXAMPLES_DIR/ex3-int-taxon.orthoxml"
 VALIDATE_INFILE="$EXAMPLES_DIR/ex3.orthoxml"
+SPLIT_INFILE="$EXAMPLES_DIR/ex4-int-taxon-multiple-rhogs.orthoxml"
 OUT_GENE_STATS="tests_output/gene_stats.json"
 OUT_EXPORT_PAIRS="tests_output/export_pairs.tsv"
 OUT_FILTERED="tests_output/filtered.orthoxml"
@@ -34,7 +35,7 @@ orthoxml export pairs --infile "$INFILE" --outfile "$OUT_EXPORT_PAIRS"
 cat "$OUT_EXPORT_PAIRS"
 
 echo -e "\n[7] Test: split"
-orthoxml split --infile "$INFILE"
+orthoxml split --infile "$SPLIT_INFILE" --outdir "tests_output/splits"
 
 echo -e "\n[8] Test: filter"
 orthoxml filter --infile "$INFILE" --score-name CompletenessScore --threshold 0.5 --strategy topdown

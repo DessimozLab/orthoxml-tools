@@ -117,7 +117,12 @@ orthoxml export groups --infile examples/data/ex1-int-taxon.orthoxml
 Split the tree into multiple trees based on rootHOGs.
 
 ```bash
-orthoxml split --infile path/to/file.orthoxml
+orthoxml split --infile path/to/file.orthoxml --outdir path/to/output_folder
+```
+
+**Examples:**
+```bash
+orthoxml split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir tests_output/splits
 ```
 
 

@@ -1,11 +1,13 @@
 # orthoxml/cli.py
 
+import os
 import argparse
 import sys
 import json
 from orthoxml import OrthoXMLTree
 from orthoxml import __version__
-from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy
+from orthoxml.parsers import process_stream_orthoxml
+from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
 from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
@@ -91,6 +93,21 @@ def handle_split(args):
         print(f"\nTree {idx + 1}:")
         print(t.groups)
 
+
+def handle_split_streaming(args):
+    infile_name = args.infile.split("/")[-1]
+
+    with RootHOGCounter(args.infile) as parser:
+        for _ in parser.parse():
+            pass
+        print(f"Count {parser.rhogs_count}")
+
+    for rhog in range(1, parser.rhogs_count + 1):
+        process_stream_orthoxml(args.infile,
+                        os.path.join(args.outdir, f"{rhog}_{infile_name}"),
+                        parser_cls=SplitterByRootHOGS,
+                        parser_kwargs={"rhogs_number": rhog})
+
 def handle_filter(args):
 
     try:
@@ -161,7 +178,8 @@ def main():
     # Split subcommand
     split_parser = subparsers.add_parser("split", help="Split the tree by rootHOGs")
     split_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    split_parser.set_defaults(func=handle_split)
+    split_parser.add_argument("--outdir", required=True, help="Path to the folder the splitted rootHOGs will be saved")
+    split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
     filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a completeness score")
