@@ -8,6 +8,7 @@ from orthoxml import OrthoXMLTree
 from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
+from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
 from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
 from orthoxml.logger import get_logger
 
@@ -121,7 +122,12 @@ def handle_conversion_to_nhx(args):
     logger.info("You can visualise each tree using https://beta.phylo.io/viewer/ as extended newick format.")
 
 def handle_conversion_from_nhx(args):
-    pass
+    orthoxml_from_newicktrees(
+        args.infile,
+        args.outfile,
+        label_to_event=None, 
+        label_to_id_and_species=None
+    )
 
 def handle_filter(args):
 
@@ -197,11 +203,13 @@ def main():
 
     ## Newick (NHX) to OrthoXML
     converter_from_nhx_parser = subparsers.add_parser("from-nhx", help="Convert Newick (NHX) to OrthoXML format")
-    converter_from_nhx_parser.add_argument("--infile", required=True, help="Path to the Newick (NHX) file")
     converter_from_nhx_parser.add_argument(
-        "--outfile",
-        help="If provided, write the OrthoXML tree to this file; otherwise, print to stdout"
+        "--infile",
+        nargs="+",  # Accept one or more input files
+        required=True,
+        help="Paths to one or more Newick (NHX) files"
     )
+    converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
     # Export subcommand

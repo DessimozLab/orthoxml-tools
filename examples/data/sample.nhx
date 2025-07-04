@@ -1,0 +1,1 @@
+((A_s1:0.1[&&NHX:conf=0.9],B_s2:0.2[&&NHX:conf=0.8])[&&NHX:S=speciesA],C_s3:0.3[&&NHX:S=speciesB]);
