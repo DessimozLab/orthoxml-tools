@@ -65,7 +65,6 @@ def handle_gene_stats(args):
         else:
             logger.info(parser.taxonomy_counts)
 
-
 def handle_taxonomy(args):
     with PrintTaxonomy(args.infile) as parser:
         for _ in parser.parse():
@@ -84,15 +83,6 @@ def handle_export(args):
             print(group)
     else:
         print("Unknown export type specified.")
-
-def handle_split(args):
-    tree = load_tree(args.infile)
-    trees = tree.split_by_rootHOGs()
-    print(f"Split into {len(trees)} trees based on rootHOGs.")
-    for idx, t in enumerate(trees):
-        print(f"\nTree {idx + 1}:")
-        print(t.groups)
-
 
 def handle_split_streaming(args):
     infile_name = args.infile.split("/")[-1]
@@ -167,6 +157,25 @@ def main():
     tax_parser = subparsers.add_parser("taxonomy", help="Print the taxonomy tree")
     tax_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     tax_parser.set_defaults(func=handle_taxonomy)
+
+    # Conversions
+    ## OrthoXML to Newick (NHX)
+    converter_to_nhx_parser = subparsers.add_parser("to-nhx", help="Convert OrthoXML to Newick (NHX) format")
+    converter_to_nhx_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    converter_to_nhx_parser.add_argument(
+        "--outfile",
+        help="If provided, write the Newick (NHX)  tree to this file; otherwise, print to stdout"
+    )
+    converter_to_nhx_parser.set_defaults(func=handle_conversion_to_nhx)
+
+    ## Newick (NHX) to OrthoXML
+    converter_from_nhx_parser = subparsers.add_parser("from-nhx", help="Convert Newick (NHX) to OrthoXML format")
+    converter_from_nhx_parser.add_argument("--infile", required=True, help="Path to the Newick (NHX) file")
+    converter_from_nhx_parser.add_argument(
+        "--outfile",
+        help="If provided, write the OrthoXML tree to this file; otherwise, print to stdout"
+    )
+    converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
     # Export subcommand
     export_parser = subparsers.add_parser("export", help="Export orthologous pairs or groups")
