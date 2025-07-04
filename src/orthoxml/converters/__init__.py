@@ -1,1 +1,1 @@
-from .genetrees import orthoxml_from_newicktrees, nhx_to_event, nhx_species_encoded_leaf, label_with_species_end
+from .from_nhx import orthoxml_from_newicktrees, nhx_to_event, nhx_species_encoded_leaf, label_with_species_end
