@@ -120,6 +120,10 @@ Split the tree into multiple trees based on rootHOGs.
 orthoxml split --infile path/to/file.orthoxml --outdir path/to/output_folder
 ```
 
+**Options:**
+- `--infile <file>`: Specify the input OrthoXML file (required).
+- `--outdir <folder>`: Specify the output folder where the trees will be saved.
+- 
 **Examples:**
 ```bash
 orthoxml split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir tests_output/splits
@@ -143,6 +147,26 @@ orthoxml to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --
 ```bash
 orthoxml to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
 ```
+
+### Newick Tree (NHX) to OrthoXML
+Convert Newick (NHX) format to OrthoXML.
+
+```bash
+orthoxml from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml
+```
+
+**Options:**
+- `--infile <file>`: Specify the input nhx file or files. (at least one file is required).
+  - You can specify multiple files by providing them as a space-separated list.
+  - If you provide multiple files, they will be combined into a single OrthoXML output.
+- `--outfile <folder>`: Specify the output OrthoXML file (required).
+
+**Example:**
+```bash
+orthoxml from-nhx --infile examples/data/sample.nhx --outfile ./tests_output/from_nhx.orthoxml
+orthoxml from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
+```
+
 
 
 ### **Help**
