@@ -176,14 +176,10 @@ class SplitterByRootHOGS(StreamOrthoXMLParser):
         if self.current_rhog == self.rhogs_number:
             return elem
 
-
-class StreamPairsParser(StreamOrthoXMLParser):
-    """
-    Extends StreamOrthoXMLParser with a streaming ortholog or para-pair extractor.
-    """
-    def __init__(self, source, ortho_para, id):
+class GetGene2IdMapping(StreamOrthoXMLParser):
+    """Get the mapping between id and geneId or protId, ..."""
+    def __init__(self, source, id):
         super().__init__(source)
-        self.ortho_para = ortho_para # orthologGroup or paralogGroup
         self.gene_id2id_mapping = {}
         self.id = id
 
@@ -195,6 +191,15 @@ class StreamPairsParser(StreamOrthoXMLParser):
             self.gene_id2id_mapping[gene.attrib.get("id")] = gene.attrib.get(self.id)
 
         return None
+
+
+class StreamPairsParser(StreamOrthoXMLParser):
+    """
+    Extends StreamOrthoXMLParser with a streaming ortholog or para-pair extractor.
+    """
+    def __init__(self, source, ortho_para):
+        super().__init__(source)
+        self.ortho_para = ortho_para # orthologGroup or paralogGroup
 
     def iter_pairs(self):
         """

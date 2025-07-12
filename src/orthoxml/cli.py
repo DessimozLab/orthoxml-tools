@@ -10,7 +10,15 @@ from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
-from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS, StreamPairsParser
+from orthoxml.custom_parsers import (
+    BasicStats,
+    GenePerTaxonStats,
+    PrintTaxonomy,
+    RootHOGCounter,
+    SplitterByRootHOGS,
+    StreamPairsParser,
+    GetGene2IdMapping,
+)
 from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
@@ -86,12 +94,12 @@ def handle_export(args):
     buffer_size = args.buffer_size
 
     if args.id != "id":
-        with StreamPairsParser(args.infile, ortho_para, args.id) as parser:
+        with GetGene2IdMapping(args.infile, args.id) as parser:
             for _ in parser.parse():
                 pass
             mapping = parser.gene_id2id_mapping
 
-    with StreamPairsParser(args.infile, ortho_para, args.id) as parser, \
+    with StreamPairsParser(args.infile, ortho_para) as parser, \
         open(args.outfile, 'wb') as raw, \
         io.BufferedWriter(raw, buffer_size=buffer_size) as buf:  # 4 MiB
 
