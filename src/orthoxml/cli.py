@@ -1,6 +1,7 @@
 # orthoxml/cli.py
 
 import os
+import io
 import argparse
 import sys
 import json
@@ -9,7 +10,7 @@ from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
-from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
+from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS, StreamPairsParser
 from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
@@ -74,18 +75,42 @@ def handle_taxonomy(args):
         print(parser.taxonomy.to_str())
 
 def handle_export(args):
-    tree = load_tree(args.infile)
-    if args.type == "pairs":
-        pairs = tree.to_ortho_pairs(filepath=args.outfile if args.outfile else None)
-        for pair in pairs:
-            print(pair)
-    elif args.type == "groups":
-        groups = tree.to_ogs(filepath=args.outfile if args.outfile else None)
-        for group in groups:
-            print(group)
+    if args.type == "ortho":
+        ortho_para = "orthologGroup"
+    elif args.type == "para":
+        ortho_para = "paralogGroup"
     else:
         print("Unknown export type specified.")
 
+    chunk_size  = args.chunk_size
+    buffer_size = args.buffer_size
+
+    if args.id != "id":
+        with StreamPairsParser(args.infile, ortho_para, args.id) as parser:
+            for _ in parser.parse():
+                pass
+            mapping = parser.gene_id2id_mapping
+
+    with StreamPairsParser(args.infile, ortho_para, args.id) as parser, \
+        open(args.outfile, 'wb') as raw, \
+        io.BufferedWriter(raw, buffer_size=buffer_size) as buf:  # 4 MiB
+
+        write = buf.write
+        lines = []
+        for count, (r_id, s_id) in enumerate(parser.iter_pairs(), 1):
+            # prepare bytes once
+            if args.id != "id":
+                print(r_id, s_id)
+                r_id, s_id = mapping.get(r_id, r_id), mapping.get(s_id, s_id)
+                print(r_id, s_id)
+                print()
+            lines.append(f"{r_id}\t{s_id}\n".encode('utf8'))
+            if count % chunk_size == 0:
+                write(b''.join(lines))
+                lines.clear()
+        if lines:
+            write(b''.join(lines))
+ 
 def handle_split_streaming(args):
     infile_name = args.infile.split("/")[-1]
 
@@ -213,10 +238,22 @@ def main():
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
     # Export subcommand
-    export_parser = subparsers.add_parser("export", help="Export orthologous pairs or groups")
+    export_parser = subparsers.add_parser("export-pairs", help="Export orthologous pairs or groups")
     export_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    export_parser.add_argument("type", choices=["pairs", "groups"], help="Type of export")
-    export_parser.add_argument("--outfile", help="Output file to write the export")
+    export_parser.add_argument("type", choices=["ortho", "para"], help="Type of export")
+    export_parser.add_argument("--outfile", required=True, help="Output file to write the export")
+    export_parser.add_argument(
+        "--id", default="id",
+        help="the identifier used in output, default to id. other values: geneId, protId"
+    )
+    export_parser.add_argument(
+        "--chunk-size", type=int, default=20_000,
+        help="Number of pairs to buffer before each write (default: 20,000)"
+    )
+    export_parser.add_argument(
+        "--buffer-size", type=int, default=(4 << 20),
+        help="Internal buffer size (in bytes) for writing (default: 4 MiB)"
+    )
     export_parser.set_defaults(func=handle_export)
 
     # Split subcommand

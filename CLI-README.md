@@ -96,21 +96,56 @@ Root
     └── Pan troglodytes
 ```
 
-### **export**
-Export orthology data as pairs or groups.
+### **export-pairs**
+Export pairs (orthologs or paralogs) in TSV form, with configurable chunking and buffering.
 
 ```bash
-orthoxml export <pairs|groups> --infile path/to/file.orthoxml [--outfile <file>]
+orthoxml export-pairs <ortho|para> \
+    --infile <file> \
+    [--outfile <file>] \
+    [--id <tag>] \
+    [--chunk-size <number>] \
+    [--buffer-size <bytes>]
 ```
 
+**Positional arguments:**
+<ortho|para>
+Choose which pair type to export:
+- `ortho`: orthologous pairs
+- `para`: paralogous pairs
+
 **Options:**
-- `--infile <file>`: Specify the input file (required).
-- `--outfile <file>`: Save output to a file.
+- `--infile <file>`: Input OrthoXML file (required).
+- `--outfile <file>`: Write output CSV to this file (required).
+- `--id <tag>`: Gene attribute to use as identifier (default: id).
+- `--chunk-size <number>`: Number of pairs to process per chunk (default: 20_000).
+- `--buffer-size <bytes>`: I/O buffer size in bytes (default: 4194304).
 
 **Examples:**
+
 ```bash
-orthoxml export pairs --infile examples/data/ex1-int-taxon.orthoxml  --outfile pairs.csv
-orthoxml export groups --infile examples/data/ex1-int-taxon.orthoxml
+# [5.1] Export ortholog pairs with default chunk & buffer sizes
+orthoxml export-pairs ortho \
+    --infile examples/data/ex1-int-taxon.orthoxml \
+    --outfile orthos.csv
+
+# [5.2] Export paralog pairs with default chunk & buffer sizes
+orthoxml export-pairs para \
+    --infile examples/data/ex1-int-taxon.orthoxml \
+    --outfile paras.csv
+
+# [5.3] Export ortholog pairs using `geneId` as the identifier column
+orthoxml export-pairs ortho \
+    --infile examples/data/ex1-int-taxon.orthoxml \
+    --outfile orthos_geneid.csv \
+    --id geneId
+
+# [5.4] Export ortholog pairs with custom chunk and buffer sizes
+orthoxml export-pairs ortho \
+    --infile examples/data/ex1-int-taxon.orthoxml \
+    --outfile orthos_custom.csv \
+    --chunk-size 5000 \
+    --buffer-size 1048576
 ```
 
 ### **split**
