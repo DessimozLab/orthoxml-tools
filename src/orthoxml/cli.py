@@ -18,6 +18,7 @@ from orthoxml.custom_parsers import (
     SplitterByRootHOGS,
     StreamPairsParser,
     GetGene2IdMapping,
+    StreamMaxOGParser,
 )
 from orthoxml.logger import get_logger
 
@@ -82,7 +83,7 @@ def handle_taxonomy(args):
             pass
         print(parser.taxonomy.to_str())
 
-def handle_export(args):
+def handle_export_pairs(args):
     if args.type == "ortho":
         ortho_para = "orthologGroup"
     elif args.type == "para":
@@ -118,7 +119,28 @@ def handle_export(args):
                 lines.clear()
         if lines:
             write(b''.join(lines))
- 
+
+def handle_export_ogs(args):
+    if args.id != "id":
+        with GetGene2IdMapping(args.infile, args.id) as parser:
+            for _ in parser.parse():
+                pass
+            mapping = parser.gene_id2id_mapping
+    else:
+        mapping = None
+
+    with StreamMaxOGParser(args.infile) as parser, \
+         open(args.outfile, 'w', encoding='utf-8') as out:
+        out.write("Group\tProtein\n")
+        c = 1
+        for tag, kept_gene_list in parser.parse():
+            if tag == "orthologGroup":
+                group_id = f"OG_{c:07d}"
+                for gene in kept_gene_list:
+                    protein_id = mapping[gene] if mapping else gene
+                    out.write(f"{group_id}\t{protein_id}\n")
+                c += 1
+
 def handle_split_streaming(args):
     infile_name = args.infile.split("/")[-1]
 
@@ -245,8 +267,8 @@ def main():
     converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
-    # Export subcommand
-    export_parser = subparsers.add_parser("export-pairs", help="Export orthologous pairs or groups")
+    # Export pairs subcommand
+    export_parser = subparsers.add_parser("export-pairs", help="Export orthologous pairs")
     export_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     export_parser.add_argument("type", choices=["ortho", "para"], help="Type of export")
     export_parser.add_argument("--outfile", required=True, help="Output file to write the export")
@@ -262,7 +284,17 @@ def main():
         "--buffer-size", type=int, default=(4 << 20),
         help="Internal buffer size (in bytes) for writing (default: 4 MiB)"
     )
-    export_parser.set_defaults(func=handle_export)
+    export_parser.set_defaults(func=handle_export_pairs)
+
+    # Export OGs subcommand
+    export_og_parser = subparsers.add_parser("export-ogs", help="Export orthologous groups")
+    export_og_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    export_og_parser.add_argument("--outfile", required=True, help="Output file to write the export")
+    export_og_parser.add_argument(
+        "--id", default="id",
+        help="the identifier used in output, default to id. other values: geneId, protId"
+    )
+    export_og_parser.set_defaults(func=handle_export_ogs)
 
     # Split subcommand
     split_parser = subparsers.add_parser("split", help="Split the tree by rootHOGs")

@@ -277,3 +277,78 @@ class StreamPairsParser(StreamOrthoXMLParser):
                 elem.clear()
                 while elem.getprevious() is not None:
                     del elem.getparent()[0]
+
+
+class StreamMaxOGParser(StreamOrthoXMLParser):
+    def __init__(self, source):
+        super().__init__(source)
+        # map from geneId (string) → species name
+        self.species_map: dict[str,str] = {}
+
+    def process_species(self, elem):
+        """Called on </species>: collect gene→species mapping."""
+        sp_name = elem.get("name")
+        # walk down to <gene> elements
+        for gene in elem.findall(".//{%s}gene" % self._ns, namespaces=self.nsmap):
+            gid = gene.get("geneId") or gene.get("id")
+            if gid:
+                self.species_map[gid] = sp_name
+        # we return None so nothing is yielded for species
+        return None
+
+    def process_toplevel_group(self, elem):
+        """
+        Called on each top-level <orthologGroup> or <paralogGroup> under <groups>.
+        Here `elem` is the root of one OG/PG subtree.
+        We compute and return the list of gene IDs to keep.
+        """
+        def local_strip(tag):
+            return tag.split("}",1)[-1]
+
+        def recurse(node) -> list[str]:
+            # gather direct geneRef IDs
+            direct_refs = [gr.get("id")
+                           for gr in node
+                           if local_strip(gr.tag) == "geneRef"
+                          ]
+            # gather all group‐children
+            child_groups = [c for c in node
+                            if local_strip(c.tag) in ("orthologGroup","paralogGroup")]
+
+            # if there are child groups, process them first
+            if child_groups:
+                child_kept = [recurse(c) for c in child_groups]
+
+                # Duplication event = a <paralogGroup> that has child groups
+                if local_strip(node.tag) == "paralogGroup":
+                    # compute species‐counts for each branch
+                    counts = []
+                    for genes in child_kept:
+                        # only count those we know species for
+                        sps = { self.species_map[g] 
+                                for g in genes 
+                                if g in self.species_map }
+                        counts.append(len(sps))
+                    # pick the branch with the max distinct species
+                    idx = counts.index(max(counts))
+                    return child_kept[idx]
+
+                else:
+                    # an <orthologGroup> with children: union everything + any direct refs
+                    out = []
+                    for genes in child_kept:
+                        out.extend(genes)
+                    out.extend(direct_refs)
+                    return out
+
+            else:
+                # leaf group (no sub-groups)
+                if local_strip(node.tag) == "paralogGroup":
+                    # keep only the first geneRef in a leaf paralogGroup
+                    return direct_refs[:1]
+                else:
+                    # orthologGroup leaf: keep them all
+                    return direct_refs
+
+        # run our bottom-up pass and return its result
+        return [recurse(elem)]

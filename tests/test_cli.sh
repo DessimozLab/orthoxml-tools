@@ -11,6 +11,7 @@ MULTIPLE_RHOGS_INFILE="$EXAMPLES_DIR/ex4-int-taxon-multiple-rhogs.orthoxml"
 OUT_GENE_STATS="tests_output/gene_stats.json"
 OUT_EXPORT_PAIRS="tests_output/export_pairs.tsv"
 OUT_FILTERED="tests_output/filtered.orthoxml"
+OUT_EXPORT_OGS="tests_output/ogs.tsv"
 
 echo "Running orthoxml CLI tests..."
 
@@ -48,17 +49,21 @@ orthoxml export-pairs \
     --buffer-size 1048576
 cat "$OUT_EXPORT_PAIRS"
 
-echo -e "\n[6] Test: split"
+echo -e "\n[6] Test: export ortho groups with --outfile"
+orthoxml export-ogs --infile "$INFILE" --outfile "$OUT_EXPORT_OGS"
+cat "$OUT_EXPORT_OGS"
+
+echo -e "\n[7] Test: split"
 orthoxml split --infile "$MULTIPLE_RHOGS_INFILE" --outdir "tests_output/splits"
 
-echo -e "\n[7] Test: filter"
+echo -e "\n[8] Test: filter"
 orthoxml filter \
     --infile "$INFILE" \
     --score-name CompletenessScore \
     --threshold 0.5 \
     --strategy topdown
 
-echo -e "\n[7.1] Test: filter with --outfile"
+echo -e "\n[8.1] Test: filter with --outfile"
 orthoxml filter \
     --infile "$INFILE" \
     --score-name CompletenessScore \
@@ -67,25 +72,25 @@ orthoxml filter \
     --outfile "$OUT_FILTERED"
 cat "$OUT_FILTERED"
 
-echo -e "\n[8] Test: OrthoXML to NHX conversion"
+echo -e "\n[9] Test: OrthoXML to NHX conversion"
 orthoxml to-nhx \
     --infile "$MULTIPLE_RHOGS_INFILE" \
     --outdir "tests_output/trees" \
     --xref-tag geneId
 
-echo -e "\n[9] Test: Newick (NHX) to OrthoXML conversion"
+echo -e "\n[10] Test: Newick (NHX) to OrthoXML conversion"
 orthoxml from-nhx --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx.orthoxml"
 orthoxml from-nhx --infile "$EXAMPLES_DIR/sample2.nhx" "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx21.orthoxml"
 
-echo -e "\n[10] Test: help commands"
+echo -e "\n[11] Test: help commands"
 orthoxml -h
 orthoxml stats -h
 
-echo -e "\n[11] Test: version"
+echo -e "\n[12] Test: version"
 orthoxml --version
 orthoxml -v
 
-echo -e "\n[12] Test: validation"
+echo -e "\n[13] Test: validation"
 orthoxml validate --infile "$VALIDATE_INFILE"
 
 echo -e "\nAll tests completed successfully."

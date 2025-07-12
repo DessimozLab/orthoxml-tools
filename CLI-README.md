@@ -102,7 +102,7 @@ Export pairs (orthologs or paralogs) in TSV form, with configurable chunking and
 ```bash
 orthoxml export-pairs <ortho|para> \
     --infile <file> \
-    [--outfile <file>] \
+    --outfile <file> \
     [--id <tag>] \
     [--chunk-size <number>] \
     [--buffer-size <bytes>]
@@ -148,6 +148,24 @@ orthoxml export-pairs ortho \
     --buffer-size 1048576
 ```
 
+
+### **export-ogs**
+Export Orthologous Groups as TSV file.
+
+```bash
+orthoxml export-ogs --infile path/to/file.orthoxml --outfile path/to/output.tsv [--id <tag>]
+```
+
+**Options:**
+- `--infile <file>`: Input OrthoXML file (required).
+- `--outfile <file>`: Write output CSV to this file (required).
+- `--id <tag>`: Gene attribute to use as identifier (default: id).
+
+**Examples:**
+```bash
+orthoxml export-ogs --infile examples/data/sample-for-og.orthoxml --outfile tests_output/ogs.tsv --id protId
+```
+
 ### **split**
 Split the tree into multiple trees based on rootHOGs.
 
@@ -166,7 +184,7 @@ orthoxml split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --ou
 
 ## File Conversions
 
-### OrthoXML to Newick Tree (NHX)
+### **OrthoXML to Newick Tree (NHX)**
 Convert OrthoXML to Newick (NHX) format.
 
 ```bash
@@ -183,7 +201,7 @@ orthoxml to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --
 orthoxml to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
 ```
 
-### Newick Tree (NHX) to OrthoXML
+### **Newick Tree (NHX) to OrthoXML**
 Convert Newick (NHX) format to OrthoXML.
 
 ```bash
