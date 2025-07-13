@@ -3,9 +3,8 @@
 import os
 import io
 import argparse
-import sys
 import json
-from orthoxml import OrthoXMLTree
+from lxml import etree
 from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
@@ -23,38 +22,26 @@ from orthoxml.custom_parsers import (
 )
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
+from .utils import validate_xml
 
 logger = get_logger(__name__)
 
-def load_tree(filepath, validate=False, score_id=None, score_threshold=None, filter_strategy=None):
-    """Load OrthoXML tree from file without applying any completeness filter."""
+def handle_validation(args):
     try:
-        if score_id and not all([score_id, score_threshold, filter_strategy]):
-            raise ValueError("If score_id is provided, score_threshold and filter_strategy must also be provided.")
-        if score_id and score_threshold and filter_strategy:
-            if filter_strategy == "bottomup":
-                tree = OrthoXMLTree.from_file(filepath,
-                                              validate=validate,
-                                              score_id=score_id,
-                                              score_threshold=score_threshold,
-                                              high_child_as_rhogs=True,
-                                              keep_low_score_parents=False)
-            elif filter_strategy == "topdown":
-                tree = OrthoXMLTree.from_file(filepath,
-                                          validate=validate,
-                                          score_id=score_id,
-                                          score_threshold=score_threshold,
-                                          high_child_as_rhogs=False,
-                                          keep_low_score_parents=False)
-            else:
-                raise ValueError("Invalid filter strategy. Use 'bottomup' or 'topdown'.")
-        else:
-            tree = OrthoXMLTree.from_file(filepath,
-                                          validate=validate)
-        return tree
+        parser = etree.XMLParser(remove_comments=True)
+        tree = etree.parse(args.infile, parser)
     except Exception as e:
-        print(f"Error loading file: {e}")
-        sys.exit(1)
+        raise Exception(f"Failed to load OrthoXML file: {e}")
+
+    orthoxml_version = tree.getroot().attrib.get('version')
+
+    if not validate_xml(tree, orthoxml_version):
+        raise Exception(
+            f"OrthoXML file is not valid for version {orthoxml_version}"
+        )
+    logger.info(
+        f"OrthoXML file '{args.infile}' is valid for version {orthoxml_version}"
+    )
 
 def handle_stats(args):
     with BasicStats(args.infile) as parser:
@@ -212,7 +199,7 @@ def main():
     # Validate subcommand
     validate_parser = subparsers.add_parser("validate", help="Validate an OrthoXML file")
     validate_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    validate_parser.set_defaults(func=lambda args: load_tree(args.infile, validate=True))
+    validate_parser.set_defaults(func=handle_validation)
 
     # Stats subcommand
     stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")
