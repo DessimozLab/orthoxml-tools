@@ -199,83 +199,83 @@ class StreamPairsParser(StreamOrthoXMLParser):
     """
     Extends StreamOrthoXMLParser with a streaming ortholog or para-pair extractor.
     """
-    def __init__(self, source, ortho_para):
+    def __init__(self, source, ortho_para: str):
+        """
+        :param source: path or file-like object for the orthoXML.
+        :param ortho_para: either 'orthologGroup' or 'paralogGroup'.
+        """
         super().__init__(source)
-        self.ortho_para = ortho_para # orthologGroup or paralogGroup
+        if ortho_para not in ('orthologGroup', 'paralogGroup'):
+            raise ValueError("ortho_para must be 'orthologGroup' or 'paralogGroup'")
+        self.ortho_para = ortho_para
 
     def iter_pairs(self):
         """
-        Yield (r_id, s_id) for every ortholog pair in the file,
-        using only O(tree-depth) memory.
+        Yield (r_id, s_id) for every pair of the specified type in the file,
+        in a single pass using only O(tree-depth × average‐refs‐per‐group) memory.
         """
-        # each frame: { type, own_refs, child_refs, child_pairs }
+        # Each frame holds:
+        #   type       = tag name ('orthologGroup' or 'paralogGroup')
+        #   own_refs   = list of geneRef IDs directly under this group
+        #   child_refs = list of lists of gene IDs from each finished child group
         group_stack = []
 
         for event, elem in self._context:
             tag = self.strip_ns(elem.tag)
 
-            # 1) on group start, push a fresh frame
-            if event == 'start' and tag in ('orthologGroup','paralogGroup'):
+            # 1) On group start: push a new frame
+            if event == 'start' and tag in ('orthologGroup', 'paralogGroup'):
                 group_stack.append({
-                    "type":        tag,
-                    "own_refs":    [],
-                    "child_refs":  [],
-                    "child_pairs": []
+                    "type":       tag,
+                    "own_refs":   [],
+                    "child_refs": []
                 })
 
-            # 2) on geneRef end, stash its id
+            # 2) On geneRef end: record its ID, then immediately clear it
             elif event == 'end' and tag == 'geneRef':
                 if group_stack:
                     group_stack[-1]["own_refs"].append(elem.get("id"))
+                # free the <geneRef> element from memory
+                elem.clear()
+                while elem.getprevious() is not None:
+                    del elem.getparent()[0]
 
-            # 3) on group end, pop & process
-            elif event == 'end' and tag in ('orthologGroup','paralogGroup'):
-                frame   = group_stack.pop()
-                own     = frame["own_refs"]
-                cref_l  = frame["child_refs"]
-                cpair_l = frame["child_pairs"]
+            # 3) On group end: pop the frame, compute & yield pairs, pass up refs
+            elif event == 'end' and tag in ('orthologGroup', 'paralogGroup'):
+                frame      = group_stack.pop()
+                own_refs   = frame["own_refs"]
+                child_refs = frame["child_refs"]
 
-                # build the flat list of all gene-refs under this node
-                gene_refs = own.copy()
-                for cr in cref_l:
-                    gene_refs.extend(cr)
+                # Build the full list of IDs under this group
+                all_refs = own_refs.copy()
+                for cr in child_refs:
+                    all_refs.extend(cr)
 
-                # flatten child-computed pairs so we can pass them up
-                flat_child_pairs = [p for cp in cpair_l for p in cp]
-
-                # if this is an orthologGroup, compute *new* pairs here
-                new_pairs = []
+                # If this is the group type we're extracting, yield its pairs:
                 if frame["type"] == self.ortho_para:
-                    # (a) all‐own‐refs
-                    for i in range(len(own)):
-                        for j in range(i+1, len(own)):
-                            new_pairs.append((own[i], own[j]))
-                    # (b) own‐vs‐each‐child
-                    for cr in cref_l:
-                        for r in own:
+                    # (a) own-vs-own
+                    for i in range(len(own_refs)):
+                        for j in range(i + 1, len(own_refs)):
+                            yield (own_refs[i], own_refs[j])
+
+                    # (b) own-vs-each-child
+                    for cr in child_refs:
+                        for r in own_refs:
                             for s in cr:
-                                new_pairs.append((r, s))
-                    # (c) between‐different‐children
-                    for i in range(len(cref_l)):
-                        for j in range(i+1, len(cref_l)):
-                            for r in cref_l[i]:
-                                for s in cref_l[j]:
-                                    new_pairs.append((r, s))
+                                yield (r, s)
 
-                    # **only** yield the new pairs for this node
-                    for pair in new_pairs:
-                        yield pair
+                    # (c) between-different-children
+                    for i in range(len(child_refs)):
+                        for j in range(i + 1, len(child_refs)):
+                            for r in child_refs[i]:
+                                for s in child_refs[j]:
+                                    yield (r, s)
 
-                # aggregate pairs to hand up to parent
-                pairs_to_pass_up = flat_child_pairs + new_pairs
-
-                # 4) hand results up to parent frame (if any)
+                # Pass the aggregated ID list up to the parent frame (if any)
                 if group_stack:
-                    parent = group_stack[-1]
-                    parent["child_refs"].append(gene_refs)
-                    parent["child_pairs"].append(pairs_to_pass_up)
+                    group_stack[-1]["child_refs"].append(all_refs)
 
-                # 5) free memory under this element
+                # 4) Free memory for this group element
                 elem.clear()
                 while elem.getprevious() is not None:
                     del elem.getparent()[0]
