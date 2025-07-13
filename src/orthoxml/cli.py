@@ -11,7 +11,6 @@ from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
 from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
-from orthoxml.streamfilters import filter_hogs, ExistingScoreBasedHOGFilter
 from orthoxml.custom_parsers import (
     BasicStats,
     GenePerTaxonStats,
@@ -22,6 +21,8 @@ from orthoxml.custom_parsers import (
     GetGene2IdMapping,
     StreamMaxOGParser,
 )
+from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
+from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
@@ -195,14 +196,9 @@ def handle_conversion_from_orthofinder(args):
     )
 
 def handle_filter(args):
-    score_filter = ExistingScoreBasedHOGFilter(score=args.score_name, value=args.threshold)
+    filter_hogs(args.infile, args.outfile, args.threshold,
+                strategy=args.strategy)
 
-    filter_hogs(
-        source_orthoxml=args.infile,
-        out=args.outfile,
-        filter=score_filter,
-        strategy=args.strategy
-    )
 
 def main():
     parser = argparse.ArgumentParser(
@@ -318,9 +314,9 @@ def main():
     )
     filter_parser.add_argument(
         "--strategy",
-        choices=["bottom-up", "top-down"],
-        default="top-down",
-        help="Filtering strategy (bottom-up or top-down)"
+        choices=[enum_to_str(e) for e in FilterStrategy],
+        default=FilterStrategy.default,
+        help="Filtering strategy (cascade-remove, extract)"
     )
     filter_parser.add_argument(
         "--outfile",

@@ -110,6 +110,10 @@ class StreamOrthoXMLParser:
         if self._should_close:
             self.stream.close()
 
+    def parse_all(self):
+        for _ in self.parse():
+            pass
+
     def parse(self):
         og_depth, pg_depth = 0, 0
         for event, elem in self._context:

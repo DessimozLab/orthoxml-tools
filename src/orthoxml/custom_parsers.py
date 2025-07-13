@@ -1,5 +1,5 @@
 # custom_parsers.py
-
+import enum
 from collections import defaultdict
 from .parsers import StreamOrthoXMLParser
 from .logger import get_logger
@@ -47,9 +47,11 @@ class BasicStats(StreamOrthoXMLParser):
 
     def process_scores(self, elem):
         return None
+
     def process_toplevel_group(self, elem):
         self.rhog_count += 1
         return None
+
 
 class GenePerTaxonStats(StreamOrthoXMLParser):
     def __init__(self, source):
