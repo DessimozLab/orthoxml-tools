@@ -255,9 +255,9 @@ orthoxml stats --help
 orthoxml stats -h
 ```
 
-# Legacy API
+## Legacy API
 
-The `orthoxml-tools` package used to provides a object oriented interface for working with OrthoXML files. This API is deprecated and will be removed in v1.0.0. Please use the new streaming CLI method. The documentation on it can be found [here]().
+The `orthoxml-tools` package used to provides a object oriented interface for working with OrthoXML files. This API is deprecated and will be removed in v1.0.0. Please use the new streaming CLI method. The documentation on it can be found [here](LEGACY-README.md).
 
 ## Testing
 
