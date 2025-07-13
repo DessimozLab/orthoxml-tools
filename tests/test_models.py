@@ -1,4 +1,4 @@
-from orthoxml.models import Gene, ORTHO_NS
+from orthoxml.legacy.models import Gene, ORTHO_NS
 from lxml import etree
 
 

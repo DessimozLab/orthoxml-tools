@@ -1,3 +1,3 @@
-from .tree import OrthoXMLTree
+from .legacy.tree import OrthoXMLTree
 
 __version__ = "0.2.11"

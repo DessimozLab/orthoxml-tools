@@ -1,7 +1,7 @@
 # exporters.py
 
 from .models import OrthologGroup, ParalogGroup, UnionFind, Taxon, Species
-from .logger import logger
+from ..logger import logger
 
 def get_ortho_pairs_iterative(root):
     """

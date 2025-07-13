@@ -3,7 +3,7 @@
 from collections import defaultdict
 from .parsers import StreamOrthoXMLParser
 from .logger import get_logger
-from .models import Taxon, ORTHO_NS
+from .legacy.models import Taxon, ORTHO_NS
 from lxml import etree
 
 logger = get_logger(__name__)
