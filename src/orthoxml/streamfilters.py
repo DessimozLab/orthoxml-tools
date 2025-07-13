@@ -4,6 +4,7 @@ import abc
 import enum
 import logging
 import inspect
+import xml.etree.ElementTree as ET
 
 from .parsers import StreamOrthoXMLParser, process_stream_orthoxml
 
@@ -25,6 +26,13 @@ class CompositePredicate(NodePredicate):
         return all(pred(node) for pred in self.predicates)
 
 
+def node_to_str(node):
+    id_field = 0
+    ids = node.xpath("@id")
+    if len(ids) > 0:
+        id_field = ids[0]
+    return f"{node.tag} {id_field}"
+
 class ScoreCheck(NodePredicate):
     """
     Checks if the node has a direct child of type:
@@ -42,7 +50,9 @@ class ScoreCheck(NodePredicate):
             if float(score.get('value')) < self.threshold:
                 return False
 
-        return found
+        if not found:
+            logger.warning(f'Field {self.score_id} not found for node "{node_to_str(node)}". Node remains')
+        return True
 
 class GeneNumberCheck(NodePredicate):
     """
@@ -117,26 +127,24 @@ class ExtractFilter(StreamOrthoXMLParser):
     added as a new toplevel orthologGroup if it contains at least min_hog_size
     genes.
     """
-    def __init__(self, source, predicate: NodePredicate, min_hog_size=2):
+    def __init__(self, source, predicate: NodePredicate, min_hog_size):
         super().__init__(source)
         self.predicate = predicate
         self.min_hog_size = min_hog_size
 
     def process_toplevel_group(self, elem):
-        def dfs(node):
-            #print("Enter", node.xpath("@id"))
-            to_extract = set()
-            children = node.xpath(
-                "./ox:orthologGroup | ./ox:paralogGroup",
-                namespaces={"ox": self._ns}
+        def get_children_groups(node):
+            return node.xpath(
+                "./ox:orthologGroup | ./ox:paralogGroup | ./ox:geneRef", namespaces={"ox": self._ns}
             )
-            for child in children:
+
+        def get_hog_size(node):
+            return len(node.xpath(".//ox:geneRef", namespaces={"ox": self._ns}))
+
+        def dfs(node):
+            to_extract = set()
+            for child in get_children_groups(node):
                 child_subtrees = dfs(child)
-                # if len(child_subtrees):
-                #     print(
-                #         "Adding trees",
-                #         ",".join(str(s.xpath("@id")) for s in child_subtrees),
-                #     )
                 to_extract = to_extract.union(child_subtrees)
 
             # Now decide whether to keep the current element
@@ -144,34 +152,34 @@ class ExtractFilter(StreamOrthoXMLParser):
                 # If not, remove it from the parent and return valid subtrees
                 parent = node.getparent()
                 parent.remove(node)
-                #print("didn't pass, remove node", node.xpath("@id"))
-                #print(
-                #    "Current to_extract",
-                #    ",".join(str(s.xpath("@id")) for s in to_extract),
-                #)
                 return to_extract
 
-            # Promote parent, drop direct children. If more descended nodes were
-            # extracted, we keep them
-            for child in children:
-                if child in to_extract:
-                    to_extract.remove(child)
-            to_extract.add(node)
-            #print("Passed check! Node", node.xpath("@id"))
-            #print("Current to_extract", ",".join(str(s.xpath("@id")) for s in to_extract))
-            return to_extract
+            if self.strip_ns(node.tag) == "paralogGroup":
+                children = get_children_groups(node)
+                # Paralog group might not exist anymore if its
+                # children were filtered out / extracted
+                if len(children) < 2:
+                    parent = node.getparent()
+                    parent.remove(node)
 
-        # logger.critical("Still need to fix two problems: "
-        #                 "1) min hog size check to extract a node. Size could be propagated upwards,"
-        #                 "but need to be careful about cases including/excluding parents etc."
-        #                 "2) If we filter out an orthologous group from a paralogous group, it's"
-        #                 "either we should not do that, or check how many sister orthologous groups are left theres."
-        #                 "If only one, strip the sister from the parent paralogous group tag")
+                    # if only one orthologous group left, reparent it
+                    if len(children):
+                        parent.insert(-1, children[0])
+
+            # if orthologGroup
+            else:
+                # Promote parent, drop direct children. If more descended nodes were
+                # extracted, we keep them
+                for child in get_children_groups(node):
+                    if child in to_extract:
+                        to_extract.remove(child)
+
+                if get_hog_size(node) >= self.min_hog_size:
+                    to_extract.add(node)
+            return to_extract
 
         new_roothogs = list(dfs(elem))
         return new_roothogs
-
-
 
 
 class ReparentFilter(StreamOrthoXMLParser):
