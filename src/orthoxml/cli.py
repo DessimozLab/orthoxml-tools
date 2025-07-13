@@ -3,15 +3,13 @@
 import os
 import io
 import argparse
-import sys
 import json
-from orthoxml import OrthoXMLTree
+from lxml import etree
 from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
 from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
-from orthoxml.streamfilters import filter_hogs, ExistingScoreBasedHOGFilter
 from orthoxml.custom_parsers import (
     BasicStats,
     GenePerTaxonStats,
@@ -22,39 +20,28 @@ from orthoxml.custom_parsers import (
     GetGene2IdMapping,
     StreamMaxOGParser,
 )
+from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
+from .utils import validate_xml
 
 logger = get_logger(__name__)
 
-def load_tree(filepath, validate=False, score_id=None, score_threshold=None, filter_strategy=None):
-    """Load OrthoXML tree from file without applying any completeness filter."""
+def handle_validation(args):
     try:
-        if score_id and not all([score_id, score_threshold, filter_strategy]):
-            raise ValueError("If score_id is provided, score_threshold and filter_strategy must also be provided.")
-        if score_id and score_threshold and filter_strategy:
-            if filter_strategy == "bottomup":
-                tree = OrthoXMLTree.from_file(filepath,
-                                              validate=validate,
-                                              score_id=score_id,
-                                              score_threshold=score_threshold,
-                                              high_child_as_rhogs=True,
-                                              keep_low_score_parents=False)
-            elif filter_strategy == "topdown":
-                tree = OrthoXMLTree.from_file(filepath,
-                                          validate=validate,
-                                          score_id=score_id,
-                                          score_threshold=score_threshold,
-                                          high_child_as_rhogs=False,
-                                          keep_low_score_parents=False)
-            else:
-                raise ValueError("Invalid filter strategy. Use 'bottomup' or 'topdown'.")
-        else:
-            tree = OrthoXMLTree.from_file(filepath,
-                                          validate=validate)
-        return tree
+        parser = etree.XMLParser(remove_comments=True)
+        tree = etree.parse(args.infile, parser)
     except Exception as e:
-        print(f"Error loading file: {e}")
-        sys.exit(1)
+        raise Exception(f"Failed to load OrthoXML file: {e}")
+
+    orthoxml_version = tree.getroot().attrib.get('version')
+
+    if not validate_xml(tree, orthoxml_version):
+        raise Exception(
+            f"OrthoXML file is not valid for version {orthoxml_version}"
+        )
+    logger.info(
+        f"OrthoXML file '{args.infile}' is valid for version {orthoxml_version}"
+    )
 
 def handle_stats(args):
     with BasicStats(args.infile) as parser:
@@ -195,14 +182,9 @@ def handle_conversion_from_orthofinder(args):
     )
 
 def handle_filter(args):
-    score_filter = ExistingScoreBasedHOGFilter(score=args.score_name, value=args.threshold)
+    filter_hogs(args.infile, args.outfile, args.threshold,
+                strategy=args.strategy)
 
-    filter_hogs(
-        source_orthoxml=args.infile,
-        out=args.outfile,
-        filter=score_filter,
-        strategy=args.strategy
-    )
 
 def main():
     parser = argparse.ArgumentParser(
@@ -217,7 +199,7 @@ def main():
     # Validate subcommand
     validate_parser = subparsers.add_parser("validate", help="Validate an OrthoXML file")
     validate_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    validate_parser.set_defaults(func=lambda args: load_tree(args.infile, validate=True))
+    validate_parser.set_defaults(func=handle_validation)
 
     # Stats subcommand
     stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")
@@ -303,13 +285,8 @@ def main():
     split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
-    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a score e.g. CompletenessScore.")
+    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by CompletenessScore.")
     filter_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    filter_parser.add_argument(
-        "--score-name",
-        required=True,
-        help="Name of the completeness score annotation (e.g. 'CompletenessScore')"
-    )
     filter_parser.add_argument(
         "--threshold",
         type=float,
@@ -318,9 +295,9 @@ def main():
     )
     filter_parser.add_argument(
         "--strategy",
-        choices=["bottom-up", "top-down"],
-        default="top-down",
-        help="Filtering strategy (bottom-up or top-down)"
+        choices=[enum_to_str(e) for e in FilterStrategy],
+        default=FilterStrategy.default,
+        help="Filtering strategy (cascade-remove, extract)"
     )
     filter_parser.add_argument(
         "--outfile",

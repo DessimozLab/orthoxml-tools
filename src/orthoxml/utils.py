@@ -4,6 +4,9 @@ import bz2
 import gzip
 import os
 from io import BytesIO
+from importlib import resources
+from lxml import etree
+from .logger import logger
 
 # File opening. This is based on the example on SO here:
 # http://stackoverflow.com/a/26986344
@@ -28,7 +31,7 @@ def auto_open(fn, *args, **kwargs):
 
     :param fn: either a string of an existing or new file path, or
         a BytesIO handle
-    :param \*\*kwargs: additional arguments that are understood by the
+    :param **kwargs: additional arguments that are understood by the
         underlying open handler
     :returns: a file handler
     """
@@ -48,3 +51,28 @@ def auto_open(fn, *args, **kwargs):
             return bz2.BZ2File(fn, *args, **kwargs)
 
     return open(fn, *args, **kwargs)
+
+def validate_xml(xml_tree, orthoxml_version) -> bool:
+    """
+    Validate an OrthoXML document against the scheme.
+    
+    :param xml_tree: An instance of the XML tree.
+    :param orthoxml_version: The OrthoXML version.
+
+    :return: True if the document is valid, False otherwise.
+    """
+    try:
+        # Load XSD schema from package resources
+        with resources.files('orthoxml.schemas').joinpath(f'orthoxml-{orthoxml_version}.xsd').open('rb') as schema_file:
+            schema_root = etree.XML(schema_file.read())
+            schema = etree.XMLSchema(schema_root)
+
+        # Validate
+        if schema.validate(xml_tree):
+            return True
+        else:
+            logger.warning(schema.error_log)
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error: {e}")
