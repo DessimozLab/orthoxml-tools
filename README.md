@@ -245,6 +245,21 @@ orthoxml from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --ou
 ```
 
 
+### **filter**
+Filter the OrthoXML tree by a completeness score. 
+
+- `--score-name <str>`: Name of the field for completeness score annotation (e.g. 'CompletenessScore') 
+- `--threshold <float>`: Threshold value for the completeness score
+- `--strategy <bottomup|topdown>`: Filtering strategy. Bottom-up will keep complete subHOGs even if they parents are incomplete.
+- `--outfile <file>`: If provided, write the filtered OrthoXML to this file; otherwise, print to stdout
+
+```bash
+orthoxml tests/test-data/case_filtering.orthoxml filter --score-name CompletenessScore \
+                                                        --threshold 0.75 \
+                                                        --strategy bottomup \
+                                                        --outfile output-oxml.orthoxml 
+```
+
 ### **Help**
 To see help for any command:
 
