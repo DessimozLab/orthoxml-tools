@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <orthoXML xmlns="http://orthoXML.org/2011/" version="0.4" origin="orthoXML.org" originVersion="1">
-  <species name="Homo sapiens" NCBITaxId="9606">
+  <species name="Homo sapiens" NCBITaxId="9607">
     <database name="someDB" version="42">
       <genes>
         <gene id="1" geneId="hsa1" />
@@ -22,17 +22,11 @@
     </database>
   </species>
   <taxonomy>
-    <taxon id="5" name="Root">
-      <taxon id="3" name="Mus musculus"/>
-      <taxon id="4" name="Primates">
-        <taxon id="1" name="Homo sapiens"/>
-        <taxon id="2" name="Pan troglodytes"/>
-      </taxon>
-    </taxon>
+    <ncbitaxonomy link="https://www.ncbi.nlm.nih.gov/taxonomy/?report=info&amp;term=" version="Oct 2022" />
   </taxonomy>
   <groups>
-    <orthologGroup taxonId="5">
-      <orthologGroup taxonId="4">
+    <orthologGroup taxonId="3141465">
+      <orthologGroup taxonId="9604">
         <geneRef id="1"/>
         <geneRef id="2"/>
       </orthologGroup>

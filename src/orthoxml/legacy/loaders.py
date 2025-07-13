@@ -7,7 +7,7 @@ from typing import Union
 from lxml import etree
 from .exceptions import OrthoXMLParsingError
 from .models import Gene, Species, OrthologGroup, ParalogGroup, Taxon, ORTHO_NS
-from .logger import get_logger
+from ..logger import get_logger
 
 
 logger = get_logger(__name__)

@@ -1,4 +1,4 @@
-from orthoxml.exporters import get_ortho_pairs_recursive, get_ogs
+from orthoxml.legacy.exporters import get_ortho_pairs_recursive, get_ogs
 
 
 def test_get_ortho_pairs_recursive():

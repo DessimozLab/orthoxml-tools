@@ -1,11 +1,32 @@
 # orthoxml/cli.py
 
+import os
+import io
 import argparse
 import sys
+import json
 from orthoxml import OrthoXMLTree
 from orthoxml import __version__
+from orthoxml.parsers import process_stream_orthoxml
+from orthoxml.converters.to_nhx import orthoxml_to_newick
+from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
+from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
+from orthoxml.streamfilters import filter_hogs, ExistingScoreBasedHOGFilter
+from orthoxml.custom_parsers import (
+    BasicStats,
+    GenePerTaxonStats,
+    PrintTaxonomy,
+    RootHOGCounter,
+    SplitterByRootHOGS,
+    StreamPairsParser,
+    GetGene2IdMapping,
+    StreamMaxOGParser,
+)
+from orthoxml.logger import get_logger
 
-def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_strategy=None):
+logger = get_logger(__name__)
+
+def load_tree(filepath, validate=False, score_id=None, score_threshold=None, filter_strategy=None):
     """Load OrthoXML tree from file without applying any completeness filter."""
     try:
         if score_id and not all([score_id, score_threshold, filter_strategy]):
@@ -36,73 +57,152 @@ def load_tree(filepath, validate, score_id=None, score_threshold=None, filter_st
         sys.exit(1)
 
 def handle_stats(args):
-    tree = load_tree(args.file, args.validate)
-    base_stats = tree.base_stats()
-    gene_stats = tree.gene_stats()
-    print("Base Stats:")
-    for key, value in base_stats.items():
-        print(f"  {key}: {value}")
-    print("\nGene Stats:")
-    for taxon_id, count in gene_stats.items():
-        print(f"  Taxon {taxon_id}: {count} genes")
-    if args.outfile:
-        with open(args.outfile, 'w') as f:
-            f.write("Metric,Value\n")
-            for key, value in base_stats.items():
-                f.write(f"{key},{value}\n")
-        print(f"\nStats written to {args.outfile}")
+    with BasicStats(args.infile) as parser:
+        for _ in parser.parse():
+            pass
+        logger.info(f"Number of species: {parser.species_count}")
+        logger.info(f"Number of genes: {parser.gene_count}")
+        logger.info(f"Number of rootHOGs: {parser.rhog_count}")
+        logger.info(f"Number of leave taxa: {parser.leave_taxon_count}")
+        logger.info(f"Total number of taxa: {parser.all_taxa_count}")
+
+def handle_gene_stats(args):
+    with GenePerTaxonStats(args.infile) as parser:
+        for _ in parser.parse():
+            pass
+        parser.compute_taxon_counts()
+        
+        if args.outfile:
+            with open(args.outfile, 'w') as outfile:
+                json.dump(parser.taxonomy_counts, outfile, indent=4)
+            logger.info(f"Gene count per taxon written to {args.outfile}")
+        else:
+            logger.info(parser.taxonomy_counts)
 
 def handle_taxonomy(args):
-    tree = load_tree(args.file, args.validate)
-    print("Taxonomy Tree:")
-    print(tree.taxonomy.to_str())
+    with PrintTaxonomy(args.infile) as parser:
+        for _ in parser.parse():
+            pass
+        print(parser.taxonomy.to_str())
 
-def handle_export(args):
-    tree = load_tree(args.file, args.validate)
-    if args.type == "pairs":
-        pairs = tree.to_ortho_pairs(filepath=args.outfile if args.outfile else None)
-        for pair in pairs:
-            print(pair)
-    elif args.type == "groups":
-        groups = tree.to_ogs(filepath=args.outfile if args.outfile else None)
-        for group in groups:
-            print(group)
+def handle_export_pairs(args):
+    if args.type == "ortho":
+        ortho_para = "orthologGroup"
+    elif args.type == "para":
+        ortho_para = "paralogGroup"
     else:
         print("Unknown export type specified.")
 
-def handle_split(args):
-    tree = load_tree(args.file, args.validate)
-    trees = tree.split_by_rootHOGs()
-    print(f"Split into {len(trees)} trees based on rootHOGs.")
-    for idx, t in enumerate(trees):
-        print(f"\nTree {idx + 1}:")
-        print(t.groups)
+    chunk_size  = args.chunk_size
+    buffer_size = args.buffer_size
+
+    if args.id != "id":
+        with GetGene2IdMapping(args.infile, args.id) as parser:
+            for _ in parser.parse():
+                pass
+            mapping = parser.gene_id2id_mapping
+
+    with StreamPairsParser(args.infile, ortho_para) as parser, \
+        open(args.outfile, 'wb') as raw, \
+        io.BufferedWriter(raw, buffer_size=buffer_size) as buf:  # 4 MiB
+
+        write = buf.write
+        lines = []
+        for count, (r_id, s_id) in enumerate(parser.iter_pairs(), 1):
+            # prepare bytes once
+            if args.id != "id":
+                print(r_id, s_id)
+                r_id, s_id = mapping.get(r_id, r_id), mapping.get(s_id, s_id)
+                print(r_id, s_id)
+                print()
+            lines.append(f"{r_id}\t{s_id}\n".encode('utf8'))
+            if count % chunk_size == 0:
+                write(b''.join(lines))
+                lines.clear()
+        if lines:
+            write(b''.join(lines))
+
+def handle_export_ogs(args):
+    if args.id != "id":
+        with GetGene2IdMapping(args.infile, args.id) as parser:
+            for _ in parser.parse():
+                pass
+            mapping = parser.gene_id2id_mapping
+    else:
+        mapping = None
+
+    with StreamMaxOGParser(args.infile) as parser, \
+         open(args.outfile, 'w', encoding='utf-8') as out:
+        out.write("Group\tProtein\n")
+        c = 1
+        for tag, kept_gene_list in parser.parse():
+            if tag == "orthologGroup":
+                group_id = f"OG_{c:07d}"
+                for gene in kept_gene_list:
+                    protein_id = mapping[gene] if mapping else gene
+                    out.write(f"{group_id}\t{protein_id}\n")
+                c += 1
+
+def handle_split_streaming(args):
+    infile_name = args.infile.split("/")[-1]
+
+    with RootHOGCounter(args.infile) as parser:
+        for _ in parser.parse():
+            pass
+        print(f"Count {parser.rhogs_count}")
+
+    for rhog in range(1, parser.rhogs_count + 1):
+        process_stream_orthoxml(args.infile,
+                        os.path.join(args.outdir, f"{rhog}_{infile_name}"),
+                        parser_cls=SplitterByRootHOGS,
+                        parser_kwargs={"rhogs_number": rhog})
+
+def handle_conversion_to_nhx(args):
+    infile = args.infile
+    outdir = args.outdir
+    xref_tag = args.xref_tag
+
+    trees = orthoxml_to_newick(infile, xref_tag=xref_tag)
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    
+    # write trees to files
+    for treeid_hog, tree in trees.items():
+        tree_file_i = os.path.join(outdir, f"tree_{treeid_hog}.nwk")
+        logger.debug(f"Writing tree {treeid_hog} to {tree_file_i}")
+        with open(tree_file_i,'w') as handle:
+            handle.write(tree)
+        handle.close()
+
+    logger.info(f"We wrote {len(trees)} trees  in nhx format from the input HOG orthoxml {infile} in {outdir}.")
+    logger.info("You can visualise each tree using https://beta.phylo.io/viewer/ as extended newick format.")
+
+def handle_conversion_from_nhx(args):
+    orthoxml_from_newicktrees(
+        args.infile,
+        args.outfile,
+        label_to_event=None, 
+        label_to_id_and_species=None
+    )
+
+def handle_conversion_from_orthofinder(args):
+    convert_csv_to_orthoxml(
+        csv_path=args.infile,
+        xml_path=args.outfile,
+        xmlns="http://orthoXML.org/2011/",
+        root_attrib={"version":"0.4","origin":"orthoXML.org","originVersion":"1"}
+    )
 
 def handle_filter(args):
+    score_filter = ExistingScoreBasedHOGFilter(score=args.score_name, value=args.threshold)
 
-    try:
-        tree = load_tree(args.file, args.validate,
-                         score_id=args.score_name,
-                         score_threshold=args.threshold,
-                         filter_strategy=args.strategy)
-
-    except Exception as e:
-        print(f"Error filtering tree: {e}")
-        sys.exit(1)
-
-    if args.outfile:
-        try:
-            tree.to_orthoxml(args.outfile)
-            print(f"Filtered file written to {args.outfile}")
-        except Exception as e:
-            print(f"Error writing filtered tree: {e}")
-            sys.exit(1)
-    else:
-        try:
-            print(tree.to_orthoxml(args.outfile))
-        except Exception as e:
-            print(f"Error serializing filtered tree to string: {e}")
-            sys.exit(1)
+    filter_hogs(
+        source_orthoxml=args.infile,
+        out=args.outfile,
+        filter=score_filter,
+        strategy=args.strategy
+    )
 
 def main():
     parser = argparse.ArgumentParser(
@@ -110,36 +210,101 @@ def main():
 
     parser.add_argument("-v", "--version", action="version",
                         version=f"%(prog)s {__version__}")
-    parser.add_argument("--validate", action="store_true",
-                        help="Validate the OrthoXML file")
-
-    # Global argument for the file path
-    parser.add_argument("file", help="Path to the OrthoXML file")
 
     subparsers = parser.add_subparsers(
         title="subcommands", dest="command", required=True)
 
+    # Validate subcommand
+    validate_parser = subparsers.add_parser("validate", help="Validate an OrthoXML file")
+    validate_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    validate_parser.set_defaults(func=lambda args: load_tree(args.infile, validate=True))
+
     # Stats subcommand
     stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")
-    stats_parser.add_argument("--outfile", help="Output file to write stats")
+    stats_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     stats_parser.set_defaults(func=handle_stats)
+
+    # Gene Stats
+    gene_stats_parser = subparsers.add_parser("gene-stats", help="Show gene statistics of the OrthoXML tree")
+    gene_stats_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    gene_stats_parser.add_argument(
+        "--outfile",
+        help="If provided, write the gene statistics to this file; otherwise, print to stdout"
+    )
+    gene_stats_parser.set_defaults(func=handle_gene_stats)
 
     # Taxonomy subcommand
     tax_parser = subparsers.add_parser("taxonomy", help="Print the taxonomy tree")
+    tax_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     tax_parser.set_defaults(func=handle_taxonomy)
 
-    # Export subcommand
-    export_parser = subparsers.add_parser("export", help="Export orthologous pairs or groups")
-    export_parser.add_argument("type", choices=["pairs", "groups"], help="Type of export")
-    export_parser.add_argument("--outfile", help="Output file to write the export")
-    export_parser.set_defaults(func=handle_export)
+    # Conversions
+    ## OrthoXML to Newick (NHX)
+    converter_to_nhx_parser = subparsers.add_parser("to-nhx", help="Convert OrthoXML to Newick (NHX) format")
+    converter_to_nhx_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    converter_to_nhx_parser.add_argument("--outdir", required=True, help="Path to the folder where the trees will be saved")
+    converter_to_nhx_parser.add_argument(
+        "--xref-tag",
+        default="protId",
+        help="the attribute of the <gene> element that should be used to get as label for the leaves labels."
+    )
+    converter_to_nhx_parser.set_defaults(func=handle_conversion_to_nhx)
+
+    ## Newick (NHX) to OrthoXML
+    converter_from_nhx_parser = subparsers.add_parser("from-nhx", help="Convert Newick (NHX) to OrthoXML format")
+    converter_from_nhx_parser.add_argument(
+        "--infile",
+        nargs="+",  # Accept one or more input files
+        required=True,
+        help="Paths to one or more Newick (NHX) files"
+    )
+    converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
+    converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
+
+    ## Orthofinder CSV to OrthoXML
+    converter_from_ortho_parser = subparsers.add_parser("from-orthofinder", help="Convert Orthofinder CSV to OrthoXML format")
+    converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to Orthofinder CSV file")
+    converter_from_ortho_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
+    converter_from_ortho_parser.set_defaults(func=handle_conversion_from_orthofinder)
+
+    # Export pairs subcommand
+    export_parser = subparsers.add_parser("export-pairs", help="Export orthologous pairs")
+    export_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    export_parser.add_argument("type", choices=["ortho", "para"], help="Type of export")
+    export_parser.add_argument("--outfile", required=True, help="Output file to write the export")
+    export_parser.add_argument(
+        "--id", default="id",
+        help="the identifier used in output, default to id. other values: geneId, protId"
+    )
+    export_parser.add_argument(
+        "--chunk-size", type=int, default=20_000,
+        help="Number of pairs to buffer before each write (default: 20,000)"
+    )
+    export_parser.add_argument(
+        "--buffer-size", type=int, default=(4 << 20),
+        help="Internal buffer size (in bytes) for writing (default: 4 MiB)"
+    )
+    export_parser.set_defaults(func=handle_export_pairs)
+
+    # Export OGs subcommand
+    export_og_parser = subparsers.add_parser("export-ogs", help="Export orthologous groups")
+    export_og_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    export_og_parser.add_argument("--outfile", required=True, help="Output file to write the export")
+    export_og_parser.add_argument(
+        "--id", default="id",
+        help="the identifier used in output, default to id. other values: geneId, protId"
+    )
+    export_og_parser.set_defaults(func=handle_export_ogs)
 
     # Split subcommand
     split_parser = subparsers.add_parser("split", help="Split the tree by rootHOGs")
-    split_parser.set_defaults(func=handle_split)
+    split_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    split_parser.add_argument("--outdir", required=True, help="Path to the folder where the splitted rootHOGs will be saved")
+    split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
-    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a completeness score")
+    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a score e.g. CompletenessScore.")
+    filter_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     filter_parser.add_argument(
         "--score-name",
         required=True,
@@ -153,13 +318,14 @@ def main():
     )
     filter_parser.add_argument(
         "--strategy",
-        choices=["bottomup", "topdown"],
-        default="topdown",
-        help="Filtering strategy (bottomup or topdown)"
+        choices=["bottom-up", "top-down"],
+        default="top-down",
+        help="Filtering strategy (bottom-up or top-down)"
     )
     filter_parser.add_argument(
         "--outfile",
-        help="If provided, write the filtered OrthoXML to this file; otherwise, print to stdout"
+        required=True,
+        help="Write the filtered OrthoXML to this file"
 )
     filter_parser.set_defaults(func=handle_filter)
 

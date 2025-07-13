@@ -1,6 +1,6 @@
 [project]
 name = "orthoxml"
-version = "0.2.11"
+version = "0.3.0"
 description = "Tools for working with OrthoXML files."
 readme = "README.md"
 authors = [
@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.9"
 dependencies = [
     "lxml>=5.3.0",
+    "dendropy>=5.0.8",
 ]
 
 [project.scripts]
