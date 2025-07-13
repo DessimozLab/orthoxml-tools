@@ -10,6 +10,7 @@ from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
 from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
+from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
 
 logger = get_logger(__name__)
@@ -130,30 +131,33 @@ def handle_conversion_from_nhx(args):
     )
 
 def handle_filter(args):
+    filter_hogs(args.infile, args.outfile, args.threshold,
+                strategy=args.strategy)
 
-    try:
-        tree = load_tree(args.infile,
-                         score_id=args.score_name,
-                         score_threshold=args.threshold,
-                         filter_strategy=args.strategy)
-
-    except Exception as e:
-        print(f"Error filtering tree: {e}")
-        sys.exit(1)
-
-    if args.outfile:
-        try:
-            tree.to_orthoxml(args.outfile)
-            print(f"Filtered file written to {args.outfile}")
-        except Exception as e:
-            print(f"Error writing filtered tree: {e}")
-            sys.exit(1)
-    else:
-        try:
-            print(tree.to_orthoxml(args.outfile))
-        except Exception as e:
-            print(f"Error serializing filtered tree to string: {e}")
-            sys.exit(1)
+    #
+    # try:
+    #     tree = load_tree(args.infile,
+    #                      score_id=args.score_name,
+    #                      score_threshold=args.threshold,
+    #                      filter_strategy=args.strategy)
+    #
+    # except Exception as e:
+    #     print(f"Error filtering tree: {e}")
+    #     sys.exit(1)
+    #
+    # if args.outfile:
+    #     try:
+    #         tree.to_orthoxml(args.outfile)
+    #         print(f"Filtered file written to {args.outfile}")
+    #     except Exception as e:
+    #         print(f"Error writing filtered tree: {e}")
+    #         sys.exit(1)
+    # else:
+    #     try:
+    #         print(tree.to_orthoxml(args.outfile))
+    #     except Exception as e:
+    #         print(f"Error serializing filtered tree to string: {e}")
+    #         sys.exit(1)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -241,9 +245,9 @@ def main():
     )
     filter_parser.add_argument(
         "--strategy",
-        choices=["bottomup", "topdown"],
-        default="topdown",
-        help="Filtering strategy (bottomup or topdown)"
+        choices=[enum_to_str(e) for e in FilterStrategy],
+        default=FilterStrategy.default,
+        help="Filtering strategy (cascade-remove, extract, reparent)"
     )
     filter_parser.add_argument(
         "--outfile",
