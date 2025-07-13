@@ -28,7 +28,7 @@ def auto_open(fn, *args, **kwargs):
 
     :param fn: either a string of an existing or new file path, or
         a BytesIO handle
-    :param \*\*kwargs: additional arguments that are understood by the
+    :param **kwargs: additional arguments that are understood by the
         underlying open handler
     :returns: a file handler
     """

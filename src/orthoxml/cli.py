@@ -21,7 +21,6 @@ from orthoxml.custom_parsers import (
     GetGene2IdMapping,
     StreamMaxOGParser,
 )
-from orthoxml.custom_parsers import BasicStats, GenePerTaxonStats, PrintTaxonomy, RootHOGCounter, SplitterByRootHOGS
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
 
@@ -299,13 +298,8 @@ def main():
     split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
-    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a score e.g. CompletenessScore.")
+    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by CompletenessScore.")
     filter_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
-    filter_parser.add_argument(
-        "--score-name",
-        required=True,
-        help="Name of the completeness score annotation (e.g. 'CompletenessScore')"
-    )
     filter_parser.add_argument(
         "--threshold",
         type=float,

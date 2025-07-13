@@ -68,17 +68,16 @@ orthoxml gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
 ```
 
 ### **filter**
-Filter orthology groups based on a specified score and threshold.
+Filter orthology groups based on CompletenessScore score and a threshold and strategy.
 
 ```bash
-orthoxml filter --infile path/to/file.orthoxml --score-name <name> --threshold <value> --strategy <top-down|bottom-up> --outfile <file>
+orthoxml filter --infile path/to/file.orthoxml --threshold <value> --strategy <cascade-remove|extract|reparent> --outfile <file>
 ```
 
 **Options:**
 - `--infile <file>`: Specify the input file. (required)
-- `--score-name <name>`: Specify the score to filter by (e.g., CompletenessScore). (required)
 - `--threshold <value>`: Set the threshold for filtering. value below this will be removed. (required)
-- `--strategy <top-down|bottom-up>`: Choose the filtering strategy (default is `top-down`).
+- `--strategy <cascade-remove|extract|reparent>`: Choose the filtering strategy (default is `cascade-remove`).
 - `--outfile <file>`: Save output to a file. if not specified, the output will be printed to stdout. (required)
 
 
@@ -279,4 +278,7 @@ The `orthoxml-tools` package used to provides a object oriented interface for wo
 ```
 uv install `.[test]`
 pytest -vv
+
+# test cli
+tests/test_cli.sh
 ```

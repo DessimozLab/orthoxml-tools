@@ -6,6 +6,7 @@ set -u  # Treat unset variables as errors
 # Define test file paths
 EXAMPLES_DIR="examples/data"
 INFILE="$EXAMPLES_DIR/ex3-int-taxon.orthoxml"
+FILTER_INFILE="$EXAMPLES_DIR/sample-for-filter.orthoxml"
 VALIDATE_INFILE="$EXAMPLES_DIR/ex3.orthoxml"
 MULTIPLE_RHOGS_INFILE="$EXAMPLES_DIR/ex4-int-taxon-multiple-rhogs.orthoxml"
 OUT_GENE_STATS="tests_output/gene_stats.json"
@@ -56,19 +57,25 @@ cat "$OUT_EXPORT_OGS"
 echo -e "\n[7] Test: split"
 orthoxml split --infile "$MULTIPLE_RHOGS_INFILE" --outdir "tests_output/splits"
 
-echo -e "\n[8.1] Test: filter top-down"
+echo -e "\n[8.1] Test: filter cascade-remove"
 orthoxml filter \
-    --infile "$INFILE" \
-    --score-name CompletenessScore \
-    --strategy top-down \
+    --infile "$FILTER_INFILE" \
+    --strategy cascade-remove \
     --threshold 0.24 \
     --outfile "$OUT_FILTERED"
 
-echo -e "\n[8.2] Test: filter bottom-up"
+#echo -e "\n[8.2] Test: filter reparent"
+#orthoxml filter \
+#    --infile "$FILTER_INFILE" \
+#    --strategy  reparent \
+#    --threshold 0.24 \
+#    --outfile "$OUT_FILTERED"
+#cat "$OUT_FILTERED"
+
+echo -e "\n[8.3] Test: filter extract"
 orthoxml filter \
-    --infile "$INFILE" \
-    --score-name CompletenessScore \
-    --strategy bottom-up \
+    --infile "$FILTER_INFILE" \
+    --strategy extract \
     --threshold 0.24 \
     --outfile "$OUT_FILTERED"
 cat "$OUT_FILTERED"
