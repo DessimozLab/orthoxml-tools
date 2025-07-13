@@ -56,19 +56,20 @@ cat "$OUT_EXPORT_OGS"
 echo -e "\n[7] Test: split"
 orthoxml split --infile "$MULTIPLE_RHOGS_INFILE" --outdir "tests_output/splits"
 
-echo -e "\n[8] Test: filter"
+echo -e "\n[8.1] Test: filter top-down"
 orthoxml filter \
     --infile "$INFILE" \
     --score-name CompletenessScore \
-    --threshold 0.5 \
-    --strategy topdown
+    --strategy top-down \
+    --threshold 0.24 \
+    --outfile "$OUT_FILTERED"
 
-echo -e "\n[8.1] Test: filter with --outfile"
+echo -e "\n[8.2] Test: filter bottom-up"
 orthoxml filter \
     --infile "$INFILE" \
     --score-name CompletenessScore \
-    --threshold 0.5 \
-    --strategy topdown \
+    --strategy bottom-up \
+    --threshold 0.24 \
     --outfile "$OUT_FILTERED"
 cat "$OUT_FILTERED"
 

@@ -58,25 +58,20 @@ orthoxml gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
 Filter orthology groups based on a specified score and threshold.
 
 ```bash
-orthoxml filter --infile path/to/file.orthoxml --score-name <name> --threshold <value> --strategy <topdown|bottomup>
+orthoxml filter --infile path/to/file.orthoxml --score-name <name> --threshold <value> --strategy <top-down|bottom-up> --outfile <file>
 ```
 
 **Options:**
-- `--infile <file>`: Specify the input file (required).
-- `--score-name <name>`: Specify the score to filter by (e.g., CompletenessScore).
-- `--threshold <value>`: Set the threshold for filtering.
-- `--strategy <topdown|bottomup>`: Choose the filtering strategy (default is `topdown`).
-- `--outfile <file>`: Save output to a file. if not specified, the output will be printed to stdout.
+- `--infile <file>`: Specify the input file. (required)
+- `--score-name <name>`: Specify the score to filter by (e.g., CompletenessScore). (required)
+- `--threshold <value>`: Set the threshold for filtering. value below this will be removed. (required)
+- `--strategy <top-down|bottom-up>`: Choose the filtering strategy (default is `top-down`).
+- `--outfile <file>`: Save output to a file. if not specified, the output will be printed to stdout. (required)
 
 
 **Examples:**
 ```bash
-orthoxml filter --infile data/test_case_2.orthoxml --score-name CompletenessScore --threshold 0.9 --strategy topdown 
-```
-
-with file output:
-```bash
-orthoxml filter --infile data/test_case_2.orthoxml --score-name CompletenessScore --threshold 0.9 --strategy topdown --outfile filtered.orthoxml
+ orthoxml filter --infile examples/data/sample-for-filter.orthoxml --score-name CompletenessScore --strategy top-down --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
 ```
 
 ### **taxonomy**

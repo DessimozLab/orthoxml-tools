@@ -122,5 +122,5 @@ def filter_hogs(source_orthoxml, out, filter: HOGFilter, strategy: str = "top-do
     process_stream_orthoxml(source_orthoxml,
                             out,
                             parser_cls=parser_cls,
-                            parser_kwargs={"streamfilters": [filter]})
+                            parser_kwargs={"filters": [filter]})
 

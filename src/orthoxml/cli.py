@@ -11,6 +11,7 @@ from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
 from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
+from orthoxml.streamfilters import filter_hogs, ExistingScoreBasedHOGFilter
 from orthoxml.custom_parsers import (
     BasicStats,
     GenePerTaxonStats,
@@ -194,30 +195,14 @@ def handle_conversion_from_orthofinder(args):
     )
 
 def handle_filter(args):
+    score_filter = ExistingScoreBasedHOGFilter(score=args.score_name, value=args.threshold)
 
-    try:
-        tree = load_tree(args.infile,
-                         score_id=args.score_name,
-                         score_threshold=args.threshold,
-                         filter_strategy=args.strategy)
-
-    except Exception as e:
-        print(f"Error filtering tree: {e}")
-        sys.exit(1)
-
-    if args.outfile:
-        try:
-            tree.to_orthoxml(args.outfile)
-            print(f"Filtered file written to {args.outfile}")
-        except Exception as e:
-            print(f"Error writing filtered tree: {e}")
-            sys.exit(1)
-    else:
-        try:
-            print(tree.to_orthoxml(args.outfile))
-        except Exception as e:
-            print(f"Error serializing filtered tree to string: {e}")
-            sys.exit(1)
+    filter_hogs(
+        source_orthoxml=args.infile,
+        out=args.outfile,
+        filter=score_filter,
+        strategy=args.strategy
+    )
 
 def main():
     parser = argparse.ArgumentParser(
@@ -318,7 +303,7 @@ def main():
     split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
-    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a completeness score")
+    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by a score e.g. CompletenessScore.")
     filter_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     filter_parser.add_argument(
         "--score-name",
@@ -333,13 +318,14 @@ def main():
     )
     filter_parser.add_argument(
         "--strategy",
-        choices=["bottomup", "topdown"],
-        default="topdown",
-        help="Filtering strategy (bottomup or topdown)"
+        choices=["bottom-up", "top-down"],
+        default="top-down",
+        help="Filtering strategy (bottom-up or top-down)"
     )
     filter_parser.add_argument(
         "--outfile",
-        help="If provided, write the filtered OrthoXML to this file; otherwise, print to stdout"
+        required=True,
+        help="Write the filtered OrthoXML to this file"
 )
     filter_parser.set_defaults(func=handle_filter)
 
