@@ -220,6 +220,21 @@ orthoxml from-nhx --infile examples/data/sample.nhx --outfile ./tests_output/fro
 orthoxml from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
 ```
 
+### **Orthofinder CSV to OrthoXML**
+Convert Orthofinder CSV format to OrthoXML.
+
+```bash
+orthoxml from-orthofinder --infile path/to/file.csv --outfile path/to/file.orthoxml
+```
+
+**Options:**
+- `--infile <file>`: Specify the input orthofinder orthogroups.csv file (required).
+- `--outfile <folder>`: Specify the output OrthoXML file (required).
+
+**Example:**
+```bash
+orthoxml from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
+```
 
 
 ### **Help**

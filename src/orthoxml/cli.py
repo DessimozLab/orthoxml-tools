@@ -10,6 +10,7 @@ from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
+from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
 from orthoxml.custom_parsers import (
     BasicStats,
     GenePerTaxonStats,
@@ -184,6 +185,14 @@ def handle_conversion_from_nhx(args):
         label_to_id_and_species=None
     )
 
+def handle_conversion_from_orthofinder(args):
+    convert_csv_to_orthoxml(
+        csv_path=args.infile,
+        xml_path=args.outfile,
+        xmlns="http://orthoXML.org/2011/",
+        root_attrib={"version":"0.4","origin":"orthoXML.org","originVersion":"1"}
+    )
+
 def handle_filter(args):
 
     try:
@@ -266,6 +275,12 @@ def main():
     )
     converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
+
+    ## Orthofinder CSV to OrthoXML
+    converter_from_ortho_parser = subparsers.add_parser("from-orthofinder", help="Convert Orthofinder CSV to OrthoXML format")
+    converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to Orthofinder CSV file")
+    converter_from_ortho_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
+    converter_from_ortho_parser.set_defaults(func=handle_conversion_from_orthofinder)
 
     # Export pairs subcommand
     export_parser = subparsers.add_parser("export-pairs", help="Export orthologous pairs")

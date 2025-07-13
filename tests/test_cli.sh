@@ -82,15 +82,18 @@ echo -e "\n[10] Test: Newick (NHX) to OrthoXML conversion"
 orthoxml from-nhx --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx.orthoxml"
 orthoxml from-nhx --infile "$EXAMPLES_DIR/sample2.nhx" "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx21.orthoxml"
 
-echo -e "\n[11] Test: help commands"
+echo -e "\n[11] Test: Orthofinder CSV to OrthoXML conversion"
+orthoxml from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
+
+echo -e "\n[12] Test: help commands"
 orthoxml -h
 orthoxml stats -h
 
-echo -e "\n[12] Test: version"
+echo -e "\n[13] Test: version"
 orthoxml --version
 orthoxml -v
 
-echo -e "\n[13] Test: validation"
+echo -e "\n[14] Test: validation"
 orthoxml validate --infile "$VALIDATE_INFILE"
 
 echo -e "\nAll tests completed successfully."
