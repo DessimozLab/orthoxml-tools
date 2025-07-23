@@ -19,6 +19,8 @@ pip install orthoxml-tools
 orthoxml-tools [options] <subcommand> [options]
 ```
 
+> Note: Input OrthoXML files can be in plain text or compressed format. Both gzip (.gz) and bzip2 (.bz2) compression are supported.
+
 ## Subcommands
 
 ### **validate**
