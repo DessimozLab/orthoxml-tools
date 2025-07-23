@@ -10,7 +10,7 @@ Tools for working with OrthoXML files.
 # Installation
 
 ```
-pip install orthoxml
+pip install orthoxml-tools
 ```
 
 # Usage
