@@ -16,7 +16,7 @@ pip install orthoxml
 # Usage
 
 ```bash
-orthoxml [options] <subcommand> [options]
+orthoxml-tools [options] <subcommand> [options]
 ```
 
 ## Subcommands
@@ -25,7 +25,7 @@ orthoxml [options] <subcommand> [options]
 Validate an OrthoXML file against the schema version specified in the file itself.
 
 ```bash
-orthoxml validate --infile path/to/file.orthoxml
+orthoxml-tools validate --infile path/to/file.orthoxml
 ```
 
 **Options:**
@@ -33,14 +33,14 @@ orthoxml validate --infile path/to/file.orthoxml
 
 **Example:**
 ```bash
-orthoxml validate --infile examples/data/ex1.orthoxml
+orthoxml-tools validate --infile examples/data/ex1.orthoxml
 ```
 
 ### **stats**
 Display basic statistics.
 
 ```bash
-orthoxml stats --infile path/to/file.orthoxml [--outfile <file>] 
+orthoxml-tools stats --infile path/to/file.orthoxml [--outfile <file>] 
 ```
 
 **Options:**
@@ -48,14 +48,14 @@ orthoxml stats --infile path/to/file.orthoxml [--outfile <file>]
 
 **Example:**
 ```bash
-orthoxml stats --infile examples/data/ex1.orthoxml
+orthoxml-tools stats --infile examples/data/ex1.orthoxml
 ```
 
 ### **gene-stats**
 Display statistics for gene count per taxon.
 
 ```bash
-orthoxml gene-stats --infile path/to/file.orthoxml [--outfile <file>]
+orthoxml-tools gene-stats --infile path/to/file.orthoxml [--outfile <file>]
 ```
 
 **Options:**
@@ -64,14 +64,14 @@ orthoxml gene-stats --infile path/to/file.orthoxml [--outfile <file>]
 
 **Example:**
 ```bash
-orthoxml gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
+orthoxml-tools gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
 ```
 
 ### **filter**
 Filter orthology groups based on CompletenessScore score and a threshold and strategy.
 
 ```bash
-orthoxml filter --infile path/to/file.orthoxml --threshold <value> --strategy <cascade-remove|extract|reparent> --outfile <file>
+orthoxml-tools filter --infile path/to/file.orthoxml --threshold <value> --strategy <cascade-remove|extract|reparent> --outfile <file>
 ```
 
 **Options:**
@@ -83,19 +83,19 @@ orthoxml filter --infile path/to/file.orthoxml --threshold <value> --strategy <c
 
 **Examples:**
 ```bash
- orthoxml filter --infile examples/data/sample-for-filter.orthoxml --score-name CompletenessScore --strategy top-down --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
+ orthoxml-tools filter --infile examples/data/sample-for-filter.orthoxml --score-name CompletenessScore --strategy top-down --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
 ```
 
 ### **taxonomy**
 Print a human-readable taxonomy tree from the OrthoXML file.
 
 ```bash
-orthoxml taxonomy --infile path/to/file.orthoxml
+orthoxml-tools taxonomy --infile path/to/file.orthoxml
 ```
 
 **Example:**
 ```bash
->>> orthoxml taxonomy --infile examples/data/ex3-int-taxon.orthoxml
+>>> orthoxml-tools taxonomy --infile examples/data/ex3-int-taxon.orthoxml
 Root
 ├── Mus musculus
 └── Primates
@@ -107,7 +107,7 @@ Root
 Export pairs (orthologs or paralogs) in TSV form, with configurable chunking and buffering.
 
 ```bash
-orthoxml export-pairs <ortho|para> \
+orthoxml-tools export-pairs <ortho|para> \
     --infile <file> \
     --outfile <file> \
     [--id <tag>] \
@@ -132,23 +132,23 @@ Choose which pair type to export:
 
 ```bash
 # [5.1] Export ortholog pairs with default chunk & buffer sizes
-orthoxml export-pairs ortho \
+orthoxml-tools export-pairs ortho \
     --infile examples/data/ex1-int-taxon.orthoxml \
     --outfile orthos.csv
 
 # [5.2] Export paralog pairs with default chunk & buffer sizes
-orthoxml export-pairs para \
+orthoxml-tools export-pairs para \
     --infile examples/data/ex1-int-taxon.orthoxml \
     --outfile paras.csv
 
 # [5.3] Export ortholog pairs using `geneId` as the identifier column
-orthoxml export-pairs ortho \
+orthoxml-tools export-pairs ortho \
     --infile examples/data/ex1-int-taxon.orthoxml \
     --outfile orthos_geneid.csv \
     --id geneId
 
 # [5.4] Export ortholog pairs with custom chunk and buffer sizes
-orthoxml export-pairs ortho \
+orthoxml-tools export-pairs ortho \
     --infile examples/data/ex1-int-taxon.orthoxml \
     --outfile orthos_custom.csv \
     --chunk-size 5000 \
@@ -160,7 +160,7 @@ orthoxml export-pairs ortho \
 Export Orthologous Groups as TSV file.
 
 ```bash
-orthoxml export-ogs --infile path/to/file.orthoxml --outfile path/to/output.tsv [--id <tag>]
+orthoxml-tools export-ogs --infile path/to/file.orthoxml --outfile path/to/output.tsv [--id <tag>]
 ```
 
 **Options:**
@@ -170,14 +170,14 @@ orthoxml export-ogs --infile path/to/file.orthoxml --outfile path/to/output.tsv 
 
 **Examples:**
 ```bash
-orthoxml export-ogs --infile examples/data/sample-for-og.orthoxml --outfile tests_output/ogs.tsv --id protId
+orthoxml-tools export-ogs --infile examples/data/sample-for-og.orthoxml --outfile tests_output/ogs.tsv --id protId
 ```
 
 ### **split**
 Split the tree into multiple trees based on rootHOGs.
 
 ```bash
-orthoxml split --infile path/to/file.orthoxml --outdir path/to/output_folder
+orthoxml-tools split --infile path/to/file.orthoxml --outdir path/to/output_folder
 ```
 
 **Options:**
@@ -186,7 +186,7 @@ orthoxml split --infile path/to/file.orthoxml --outdir path/to/output_folder
 - 
 **Examples:**
 ```bash
-orthoxml split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir tests_output/splits
+orthoxml-tools split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir tests_output/splits
 ```
 
 ## File Conversions
@@ -195,7 +195,7 @@ orthoxml split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --ou
 Convert OrthoXML to Newick (NHX) format.
 
 ```bash
-orthoxml to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --xref-tag [geneId,protId,...]    
+orthoxml-tools to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --xref-tag [geneId,protId,...]    
 ```
 
 **Options:**
@@ -205,14 +205,14 @@ orthoxml to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --
 
 **Example:**
 ```bash
-orthoxml to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
+orthoxml-tools to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
 ```
 
 ### **Newick Tree (NHX) to OrthoXML**
 Convert Newick (NHX) format to OrthoXML.
 
 ```bash
-orthoxml from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml
+orthoxml-tools from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml
 ```
 
 **Options:**
@@ -223,15 +223,15 @@ orthoxml from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml
 
 **Example:**
 ```bash
-orthoxml from-nhx --infile examples/data/sample.nhx --outfile ./tests_output/from_nhx.orthoxml
-orthoxml from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
+orthoxml-tools from-nhx --infile examples/data/sample.nhx --outfile ./tests_output/from_nhx.orthoxml
+orthoxml-tools from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
 ```
 
 ### **Orthofinder CSV to OrthoXML**
 Convert Orthofinder CSV format to OrthoXML.
 
 ```bash
-orthoxml from-orthofinder --infile path/to/file.csv --outfile path/to/file.orthoxml
+orthoxml-tools from-orthofinder --infile path/to/file.csv --outfile path/to/file.orthoxml
 ```
 
 **Options:**
@@ -240,7 +240,7 @@ orthoxml from-orthofinder --infile path/to/file.csv --outfile path/to/file.ortho
 
 **Example:**
 ```bash
-orthoxml from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
+orthoxml-tools from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
 ```
 
 
@@ -253,7 +253,7 @@ Filter the OrthoXML tree by a completeness score.
 - `--outfile <file>`: If provided, write the filtered OrthoXML to this file; otherwise, print to stdout
 
 ```bash
-orthoxml tests/test-data/case_filtering.orthoxml filter --score-name CompletenessScore \
+orthoxml-tools tests/test-data/case_filtering.orthoxml filter --score-name CompletenessScore \
                                                         --threshold 0.75 \
                                                         --strategy bottomup \
                                                         --outfile output-oxml.orthoxml 
@@ -263,10 +263,10 @@ orthoxml tests/test-data/case_filtering.orthoxml filter --score-name Completenes
 To see help for any command:
 
 ```bash
-orthoxml --help
-orthoxml -h
-orthoxml stats --help
-orthoxml stats -h
+orthoxml-tools --help
+orthoxml-tools -h
+orthoxml-tools stats --help
+orthoxml-tools stats -h
 ```
 
 ## Legacy API
