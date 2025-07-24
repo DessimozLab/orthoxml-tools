@@ -98,7 +98,10 @@ orthoxml-tools taxonomy --infile path/to/file.orthoxml
 
 **Example:**
 ```bash
->>> orthoxml-tools taxonomy --infile examples/data/ex3-int-taxon.orthoxml
+orthoxml-tools taxonomy --infile examples/data/ex3-int-taxon.orthoxml
+```
+Output:
+```bash
 Root
 ├── Mus musculus
 └── Primates
