@@ -22,7 +22,7 @@ from orthoxml.custom_parsers import (
 )
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
-from .utils import validate_xml
+from orthoxml.utils import validate_xml
 
 logger = get_logger(__name__)
 
@@ -296,7 +296,7 @@ def main():
     filter_parser.add_argument(
         "--strategy",
         choices=[enum_to_str(e) for e in FilterStrategy],
-        default=FilterStrategy.default,
+        default=enum_to_str(FilterStrategy.CASCADE_REMOVE),
         help="Filtering strategy (cascade-remove, extract)"
     )
     filter_parser.add_argument(
