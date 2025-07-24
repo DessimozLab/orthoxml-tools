@@ -73,19 +73,20 @@ orthoxml-tools gene-stats --infile examples/data/ex1.orthoxml --outfile gene_sta
 Filter orthology groups based on CompletenessScore score and a threshold and strategy.
 
 ```bash
-orthoxml-tools filter --infile path/to/file.orthoxml --threshold <value> --strategy <cascade-remove|extract|reparent> --outfile <file>
+orthoxml-tools filter --infile path/to/file.orthoxml --threshold <value> --strategy <cascade-remove|extract> --outfile <file>
 ```
 
 **Options:**
 - `--infile <file>`: Specify the input file. (required)
 - `--threshold <value>`: Set the threshold for filtering. value below this will be removed. (required)
-- `--strategy <cascade-remove|extract|reparent>`: Choose the filtering strategy (default is `cascade-remove`).
+- `--strategy <cascade-remove|extract>`: Choose the filtering strategy (default is `cascade-remove`).
 - `--outfile <file>`: Save output to a file. if not specified, the output will be printed to stdout. (required)
 
+Here, `--strategy` decides how to process descendend orthologous groups of a group that is filtered out. For `cascade-remove`, all nested groups will also be removed with the parent group. For `extract`, any nested group that passes the threshold check will become a new root-level group.
 
 **Examples:**
 ```bash
- orthoxml-tools filter --infile examples/data/sample-for-filter.orthoxml --score-name CompletenessScore --strategy top-down --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
+orthoxml-tools filter --infile examples/data/sample-for-filter.orthoxml --strategy cascade-remove --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
 ```
 
 ### **taxonomy**
@@ -243,22 +244,6 @@ orthoxml-tools from-orthofinder --infile path/to/file.csv --outfile path/to/file
 **Example:**
 ```bash
 orthoxml-tools from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
-```
-
-
-### **filter**
-Filter the OrthoXML tree by a completeness score. 
-
-- `--score-name <str>`: Name of the field for completeness score annotation (e.g. 'CompletenessScore') 
-- `--threshold <float>`: Threshold value for the completeness score
-- `--strategy <bottomup|topdown>`: Filtering strategy. Bottom-up will keep complete subHOGs even if they parents are incomplete.
-- `--outfile <file>`: If provided, write the filtered OrthoXML to this file; otherwise, print to stdout
-
-```bash
-orthoxml-tools tests/test-data/case_filtering.orthoxml filter --score-name CompletenessScore \
-                                                        --threshold 0.75 \
-                                                        --strategy bottomup \
-                                                        --outfile output-oxml.orthoxml 
 ```
 
 ### **Help**
