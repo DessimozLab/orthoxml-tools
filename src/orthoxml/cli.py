@@ -249,9 +249,9 @@ def main():
     converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
-    ## Orthofinder CSV to OrthoXML
-    converter_from_ortho_parser = subparsers.add_parser("from-orthofinder", help="Convert Orthofinder CSV to OrthoXML format")
-    converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to Orthofinder CSV file")
+    ## OrthoGroup CSV to OrthoXML
+    converter_from_ortho_parser = subparsers.add_parser("from-csv", help="Convert OrthoGroup CSV to OrthoXML format")
+    converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to OrthoGroup CSV file")
     converter_from_ortho_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_ortho_parser.set_defaults(func=handle_conversion_from_orthofinder)
 
