@@ -22,7 +22,7 @@ from orthoxml.custom_parsers import (
 )
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
 from orthoxml.logger import get_logger
-from .utils import validate_xml
+from orthoxml.utils import validate_xml
 
 logger = get_logger(__name__)
 
@@ -148,12 +148,13 @@ def handle_conversion_to_nhx(args):
     infile = args.infile
     outdir = args.outdir
     xref_tag = args.xref_tag
+    encode_levels_as_nhx = args.encode_levels
 
-    trees = orthoxml_to_newick(infile, xref_tag=xref_tag)
+    trees = orthoxml_to_newick(infile, xref_tag=xref_tag, encode_levels_as_nhx=encode_levels_as_nhx)
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    
+
     # write trees to files
     for treeid_hog, tree in trees.items():
         tree_file_i = os.path.join(outdir, f"tree_{treeid_hog}.nwk")
@@ -230,6 +231,11 @@ def main():
         default="protId",
         help="the attribute of the <gene> element that should be used to get as label for the leaves labels."
     )
+    converter_to_nhx_parser.add_argument(
+        "--encode-levels",
+        action="store_true",
+        help="If set, encode group levels as NHX comments in the output tree."
+    )
     converter_to_nhx_parser.set_defaults(func=handle_conversion_to_nhx)
 
     ## Newick (NHX) to OrthoXML
@@ -243,9 +249,9 @@ def main():
     converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
-    ## Orthofinder CSV to OrthoXML
-    converter_from_ortho_parser = subparsers.add_parser("from-orthofinder", help="Convert Orthofinder CSV to OrthoXML format")
-    converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to Orthofinder CSV file")
+    ## OrthoGroup CSV to OrthoXML
+    converter_from_ortho_parser = subparsers.add_parser("from-csv", help="Convert OrthoGroup CSV to OrthoXML format")
+    converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to OrthoGroup CSV file")
     converter_from_ortho_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_ortho_parser.set_defaults(func=handle_conversion_from_orthofinder)
 
@@ -296,7 +302,7 @@ def main():
     filter_parser.add_argument(
         "--strategy",
         choices=[enum_to_str(e) for e in FilterStrategy],
-        default=FilterStrategy.default,
+        default=enum_to_str(FilterStrategy.CASCADE_REMOVE),
         help="Filtering strategy (cascade-remove, extract)"
     )
     filter_parser.add_argument(

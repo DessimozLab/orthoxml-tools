@@ -75,11 +75,6 @@ def enum_to_str(e):
 class FilterStrategy(enum.Enum):
     CASCADE_REMOVE = 0
     EXTRACT = 1
-    REPARENT = 2
-
-    @property
-    def default(cls):
-        return cls.CASCADE_REMOVE
 
 
 class CascadeRemoveFilter(StreamOrthoXMLParser):
@@ -181,24 +176,12 @@ class ExtractFilter(StreamOrthoXMLParser):
         new_roothogs = list(dfs(elem))
         return new_roothogs
 
-
-class ReparentFilter(StreamOrthoXMLParser):
-    def __init__(self, source, predicate: NodePredicate, min_hog_size=2):
-        super().__init__(source)
-        self.predicate = predicate
-        self.min_hog_size = min_hog_size
-
-    def process_toplevel_group(self, elem):
-        raise NotImplementedError()
-
-
 def _strategy_to_filterclass(strategy: str) -> StreamOrthoXMLParser:
     to_enum_val = { enum_to_str(e): e for e in FilterStrategy }
 
     filter_select = {
         FilterStrategy.CASCADE_REMOVE: CascadeRemoveFilter,
-        FilterStrategy.EXTRACT: ExtractFilter,
-        FilterStrategy.REPARENT: ReparentFilter
+        FilterStrategy.EXTRACT: ExtractFilter
     }
 
     if strategy in to_enum_val:
@@ -221,7 +204,7 @@ def filter_kwargs(cls, kwargs):
 def filter_hogs(source_orthoxml, out,
                 score_threshold: float,
                 min_hog_size: int = 2,
-                strategy: str = FilterStrategy.default):
+                strategy: str = FilterStrategy.CASCADE_REMOVE):
     """Filter hogs according to the given strategy with a given HOGFilter"""
 
     parser_cls = _strategy_to_filterclass(strategy)
