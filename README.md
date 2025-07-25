@@ -23,7 +23,7 @@ orthoxml-tools [options] <subcommand> [options]
 
 ## Subcommands
 
-### **validate**
+### 🛠️ **validate**
 Validate an OrthoXML file against the schema version specified in the file itself.
 
 ```bash
@@ -38,7 +38,7 @@ orthoxml-tools validate --infile path/to/file.orthoxml
 orthoxml-tools validate --infile examples/data/ex1.orthoxml
 ```
 
-### **stats**
+### 🛠️ **stats**
 Display basic statistics.
 
 ```bash
@@ -53,7 +53,7 @@ orthoxml-tools stats --infile path/to/file.orthoxml [--outfile <file>]
 orthoxml-tools stats --infile examples/data/ex1.orthoxml
 ```
 
-### **gene-stats**
+### 🛠️ **gene-stats**
 Display statistics for gene count per taxon.
 
 ```bash
@@ -69,7 +69,7 @@ orthoxml-tools gene-stats --infile path/to/file.orthoxml [--outfile <file>]
 orthoxml-tools gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
 ```
 
-### **filter**
+### 🛠️ **filter**
 Filter orthology groups based on CompletenessScore score and a threshold and strategy.
 
 ```bash
@@ -88,7 +88,7 @@ orthoxml-tools filter --infile path/to/file.orthoxml --threshold <value> --strat
  orthoxml-tools filter --infile examples/data/sample-for-filter.orthoxml --score-name CompletenessScore --strategy top-down --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
 ```
 
-### **taxonomy**
+### 🛠️ **taxonomy**
 Print a human-readable taxonomy tree from the OrthoXML file.
 
 ```bash
@@ -105,7 +105,7 @@ Root
     └── Pan troglodytes
 ```
 
-### **export-pairs**
+### 🛠️ **export-pairs**
 Export pairs (orthologs or paralogs) in TSV form, with configurable chunking and buffering.
 
 ```bash
@@ -158,7 +158,7 @@ orthoxml-tools export-pairs ortho \
 ```
 
 
-### **export-ogs**
+### 🛠️ **export-ogs**
 Export Orthologous Groups as TSV file.
 
 ```bash
@@ -175,7 +175,7 @@ orthoxml-tools export-ogs --infile path/to/file.orthoxml --outfile path/to/outpu
 orthoxml-tools export-ogs --infile examples/data/sample-for-og.orthoxml --outfile tests_output/ogs.tsv --id protId
 ```
 
-### **split**
+### 🛠️ **split**
 Split the tree into multiple trees based on rootHOGs.
 
 ```bash
@@ -193,7 +193,7 @@ orthoxml-tools split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxm
 
 ## File Conversions
 
-### **OrthoXML to Newick Tree (NHX)**
+### 🛠️ **OrthoXML to Newick Tree (NHX)**
 Convert OrthoXML to Newick (NHX) format.
 
 ```bash
@@ -210,7 +210,7 @@ orthoxml-tools to-nhx --infile path/to/file.orthoxml --outdir path/to/output_fol
 orthoxml-tools to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
 ```
 
-### **Newick Tree (NHX) to OrthoXML**
+### 🛠️ **Newick Tree (NHX) to OrthoXML**
 Convert Newick (NHX) format to OrthoXML.
 
 ```bash
@@ -229,7 +229,7 @@ orthoxml-tools from-nhx --infile examples/data/sample.nhx --outfile ./tests_outp
 orthoxml-tools from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
 ```
 
-### **Orthofinder CSV to OrthoXML**
+### 🛠️ **Orthofinder CSV to OrthoXML**
 Convert Orthofinder CSV format to OrthoXML.
 
 ```bash
@@ -246,7 +246,7 @@ orthoxml-tools from-orthofinder --infile examples/data/OrthofinderOrthogroups.cs
 ```
 
 
-### **filter**
+### 🛠️ **filter**
 Filter the OrthoXML tree by a completeness score. 
 
 - `--score-name <str>`: Name of the field for completeness score annotation (e.g. 'CompletenessScore') 
