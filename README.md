@@ -50,7 +50,7 @@ orthoxml-tools stats --infile path/to/file.orthoxml [--outfile <file>]
 
 **Example:**
 ```bash
-orthoxml-tools stats --infile examples/data/ex1.orthoxml
+orthoxml-tools stats --infile examples/data/ex3-int-taxon.orthoxml
 ```
 
 ### 🛠️ **gene-stats**
@@ -62,11 +62,11 @@ orthoxml-tools gene-stats --infile path/to/file.orthoxml [--outfile <file>]
 
 **Options:**
 - `--infile <file>`: Specify the input file (required).
-- `--outfile <file>`: Write stats to a CSV file.
+- `--outfile <file>`: Write stats to a txt file.
 
 **Example:**
 ```bash
-orthoxml-tools gene-stats --infile examples/data/ex1.orthoxml --outfile gene_stats.csv
+orthoxml-tools gene-stats --infile examples/data/ex3-int-taxon.orthoxml --outfile gene_stats.txt
 ```
 
 ### 🛠️ **filter**
@@ -204,10 +204,11 @@ orthoxml-tools to-nhx --infile path/to/file.orthoxml --outdir path/to/output_fol
 - `--infile <file>`: Specify the input OrthoXML file (required).
 - `--outdir <folder>`: Specify the output folder where the NHX files will be saved (required).
 - `--xref-tag <tag>`: Specify the attribute of the `<gene>` element to use as the label for the leaves. Default is `protId`.
-
+- `--encode-levels`: If set, encode group levels as NHX comments in the output tree. This is useful for visualizing the hierarchy of orthologous groups.
+  
 **Example:**
 ```bash
-orthoxml-tools to-nhx --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir ./tests_output/trees --xref-tag geneId
+orthoxml-tools to-nhx --infile examples/data/sample-for-nhx.orthoxml --outdir ./tests_output/trees --xref-tag protId --encode-levels
 ```
 
 ### 🛠️ **Newick Tree (NHX) to OrthoXML**

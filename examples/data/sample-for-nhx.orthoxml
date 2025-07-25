@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='utf-8'?>
+<orthoXML xmlns="http://orthoXML.org/2011/" origin="FastOMA 0.3.5+dev" originVersion="2025-02-14 16:39:57" version="0.5">
+  <species name="GORGO" taxonId="5" NCBITaxId="0">
+    <database name="database" version="2023">
+      <genes>
+        <gene id="1000000001" protId="GORGO00127" />
+        <gene id="1000000002" protId="GORGO03220" />
+        <gene id="1000000003" protId="GORGO23708" />
+        <gene id="1000000004" protId="GORGO19784" />
+      </genes>
+    </database>
+  </species>
+  <species name="HUMAN" taxonId="3" NCBITaxId="0">
+    <database name="database" version="2023">
+      <genes>
+        <gene id="1001000001" protId="HUMAN04170" />
+        <gene id="1001000002" protId="HUMAN60241" />
+        <gene id="1001000003" protId="HUMAN54230" />
+      </genes>
+    </database>
+  </species>
+  <species name="PANTR" taxonId="4" NCBITaxId="0">
+    <database name="database" version="2023">
+      <genes>
+        <gene id="1002000001" protId="PANTR02124" />
+        <gene id="1002000002" protId="PANTR26441" />
+        <gene id="1002000003" protId="PANTR23396" />
+      </genes>
+    </database>
+  </species>
+  <taxonomy>
+    <taxon id="1" name="inter2">
+      <taxon id="2" name="inter1">
+        <taxon id="3" name="HUMAN" />
+        <taxon id="4" name="PANTR" />
+      </taxon>
+      <taxon id="5" name="GORGO" />
+    </taxon>
+  </taxonomy>
+  <scores>
+    <scoreDef id="CompletenessScore" desc="Fraction of expected species with genes in the (Sub)HOG" />
+  </scores>
+  <groups>
+    <orthologGroup id="HOG:0000001_1" taxonId="1">
+      <score id="CompletenessScore" value="1.0" />
+      <property name="OMAmerRootHOG" value="HOG:E0746896" />
+      <property name="TaxRange" value="inter2" />
+      <geneRef id="1000000002" />
+      <orthologGroup id="HOG:0000001_2" taxonId="2">
+        <score id="CompletenessScore" value="1.0" />
+        <property name="TaxRange" value="inter1" />
+        <geneRef id="1001000001" />
+        <geneRef id="1002000001" />
+      </orthologGroup>
+    </orthologGroup>
+    <orthologGroup id="HOG:0000002_1" taxonId="1">
+      <score id="CompletenessScore" value="1.0" />
+      <property name="OMAmerRootHOG" value="HOG:E0747387" />
+      <property name="TaxRange" value="inter2" />
+      <geneRef id="1000000003" />
+      <orthologGroup id="HOG:0000002_2" taxonId="2">
+        <score id="CompletenessScore" value="1.0" />
+        <property name="TaxRange" value="inter1" />
+        <geneRef id="1001000002" />
+        <geneRef id="1002000002" />
+      </orthologGroup>
+    </orthologGroup>
+    <orthologGroup id="HOG:0000003_1" taxonId="1">
+      <score id="CompletenessScore" value="1.0" />
+      <property name="OMAmerRootHOG" value="HOG:E0801945" />
+      <property name="TaxRange" value="inter2" />
+      <geneRef id="1000000004" />
+      <orthologGroup id="HOG:0000003_2" taxonId="2">
+        <score id="CompletenessScore" value="0.1" />
+        <property name="TaxRange" value="inter1" />
+        <geneRef id="1001000003" />
+        <geneRef id="1002000003" />
+      </orthologGroup>
+    </orthologGroup>
+  </groups>
+</orthoXML>
