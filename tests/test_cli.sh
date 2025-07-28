@@ -64,14 +64,6 @@ orthoxml-tools filter \
     --threshold 0.24 \
     --outfile "$OUT_FILTERED"
 
-#echo -e "\n[8.2] Test: filter reparent"
-#orthoxml-tools filter \
-#    --infile "$FILTER_INFILE" \
-#    --strategy  reparent \
-#    --threshold 0.24 \
-#    --outfile "$OUT_FILTERED"
-#cat "$OUT_FILTERED"
-
 echo -e "\n[8.3] Test: filter extract"
 orthoxml-tools filter \
     --infile "$FILTER_INFILE" \
@@ -91,7 +83,7 @@ orthoxml-tools from-nhx --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_out
 orthoxml-tools from-nhx --infile "$EXAMPLES_DIR/sample2.nhx" "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx21.orthoxml"
 
 echo -e "\n[11] Test: Orthofinder CSV to OrthoXML conversion"
-orthoxml-tools from-orthofinder --infile examples/data/OrthofinderOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
+orthoxml-tools from-csv --infile examples/data/InputOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
 
 echo -e "\n[12] Test: help commands"
 orthoxml-tools -h
@@ -104,4 +96,5 @@ orthoxml-tools -v
 echo -e "\n[14] Test: validation"
 orthoxml-tools validate --infile "$VALIDATE_INFILE"
 
-echo -e "\nAll tests completed successfully."
+echo -e "\n"
+echo -e "\\033[32mAll tests completed successfully.\\033[0m"
