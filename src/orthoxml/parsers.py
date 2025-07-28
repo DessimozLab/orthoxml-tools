@@ -183,8 +183,12 @@ def process_stream_orthoxml(
         parser_kwargs=dict(),
         writer_kwargs=dict(),
 ):
-    parent_dir = os.path.dirname(outfile)
-    os.makedirs(parent_dir, exist_ok=True)
+    # only mkdir if outfile is actually a path
+    if isinstance(outfile, (str, PathLike)):
+        outpath = str(outfile)
+        parent_dir = os.path.dirname(outpath)
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
 
     with parser_cls(infile, **parser_kwargs) as parser:
         root_tag, nsmap, attrib = parser.root_tag, parser.nsmap, parser.root_attribs
