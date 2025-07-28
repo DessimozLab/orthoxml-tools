@@ -1,11 +1,10 @@
 # logger.py
 
 import logging
-import sys
 
 # Configure the base logger
 logger = logging.getLogger("orthoxml")
-logger.setLevel(logging.DEBUG)
+logging_level = logging.WARNING
 
 # Create formatters
 console_formatter = logging.Formatter(
@@ -14,7 +13,7 @@ console_formatter = logging.Formatter(
 )
 
 # Console handler
-console_handler = logging.StreamHandler(sys.stdout)
+console_handler = logging.StreamHandler()
 console_handler.setFormatter(console_formatter)
 
 # Add handlers
@@ -29,6 +28,13 @@ def get_logger(name: str = None) -> logging.Logger:
     Returns:
         Logger instance
     """
-    if name:
-        return logging.getLogger(f"orthoxml.{name}")
-    return logger
+    base = "orthoxml"
+    full_name = f"{base}.{name}" if name else base
+    return logging.getLogger(full_name)
+
+def set_logger_level(level):
+    level = getattr(logging, level.upper(), logging.WARNING)
+
+    logger.setLevel(level)
+    for handler in logger.handlers:
+        handler.setLevel(level)
