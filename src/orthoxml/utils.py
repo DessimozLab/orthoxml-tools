@@ -52,27 +52,35 @@ def auto_open(fn, *args, **kwargs):
 
     return open(fn, *args, **kwargs)
 
-def validate_xml(xml_tree, orthoxml_version) -> bool:
+def validate_xml(xml_file_path: str, orthoxml_version: str) -> bool:
     """
-    Validate an OrthoXML document against the scheme.
-    
-    :param xml_tree: An instance of the XML tree.
-    :param orthoxml_version: The OrthoXML version.
+    Stream-validate an OrthoXML file against the specified schema version.
 
-    :return: True if the document is valid, False otherwise.
+    :param xml_file_path: Path to the OrthoXML file.
+    :param orthoxml_version: The OrthoXML version as a string.
+    :return: True if valid, False otherwise.
     """
     try:
         # Load XSD schema from package resources
-        with resources.files('orthoxml.schemas').joinpath(f'orthoxml-{orthoxml_version}.xsd').open('rb') as schema_file:
+        schema_filename = f'orthoxml-{orthoxml_version}.xsd'
+        with resources.files('orthoxml.schemas').joinpath(schema_filename).open('rb') as schema_file:
             schema_root = etree.XML(schema_file.read())
             schema = etree.XMLSchema(schema_root)
 
-        # Validate
-        if schema.validate(xml_tree):
-            return True
-        else:
-            logger.warning(schema.error_log)
-            return False
-            
+        # Stream-parse and validate the file
+        for _, elem in etree.iterparse(xml_file_path, schema=schema, recover=False):
+            elem.clear()
+
+        return True
+
+    except etree.XMLSyntaxError as e:
+        logger.error(f"Validation failed: XML file '{xml_file_path}' is not valid for schema {schema_filename}: {e}")
+        return False
+
+    except etree.XMLSchemaParseError as e:
+        logger.error(f"Invalid XML Schema '{schema_filename}': {e}")
+        raise
+
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.exception(f"Unexpected error during validation of '{xml_file_path}': {e}")
+        raise

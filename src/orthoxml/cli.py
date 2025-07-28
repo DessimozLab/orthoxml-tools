@@ -28,17 +28,21 @@ logger = get_logger(__name__)
 
 def handle_validation(args):
     try:
-        parser = etree.XMLParser(remove_comments=True)
-        tree = etree.parse(args.infile, parser)
-    except Exception as e:
-        raise Exception(f"Failed to load OrthoXML file: {e}")
+        # Get version from root attribute using fast/partial parse
+        for event, elem in etree.iterparse(args.infile, events=('start',), remove_comments=True):
+            orthoxml_version = elem.attrib.get('version')
+            break  # Only need root element
+    except (etree.XMLSyntaxError, OSError) as e:
+        raise Exception(f"Failed to parse OrthoXML file '{args.infile}': {e}")
 
-    orthoxml_version = tree.getroot().attrib.get('version')
+    if not orthoxml_version:
+        raise Exception("Missing OrthoXML version attribute in the root element.")
 
-    if not validate_xml(tree, orthoxml_version):
+    if not validate_xml(args.infile, orthoxml_version):
         raise Exception(
-            f"OrthoXML file is not valid for version {orthoxml_version}"
+            f"OrthoXML file '{args.infile}' is not valid for version {orthoxml_version}"
         )
+
     logger.info(
         f"OrthoXML file '{args.infile}' is valid for version {orthoxml_version}"
     )
