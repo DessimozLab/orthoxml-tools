@@ -21,7 +21,7 @@ from orthoxml.custom_parsers import (
     StreamMaxOGParser,
 )
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
-from orthoxml.logger import get_logger
+from orthoxml.logger import get_logger, set_logger_level
 from orthoxml.utils import validate_xml
 
 logger = get_logger(__name__)
@@ -188,9 +188,17 @@ def handle_filter(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Command Line Interface for orthoxml-tools")
+    # Parser for shared options between commands
+    shared_args_parser = argparse.ArgumentParser(add_help=False)
+    shared_args_parser.add_argument(
+        "--log",
+        default="WARNING",
+        help="Set the logging level [DEBUG | INFO | WARNING | ERROR | CRITICAL]",
+    )
 
+    parser = argparse.ArgumentParser(
+        description="Command Line Interface for orthoxml-tools",
+    )
     parser.add_argument("-v", "--version", action="version",
                         version=f"%(prog)s {__version__}")
 
@@ -198,17 +206,23 @@ def main():
         title="subcommands", dest="command", required=True)
 
     # Validate subcommand
-    validate_parser = subparsers.add_parser("validate", help="Validate an OrthoXML file")
+    validate_parser = subparsers.add_parser("validate",
+                                            parents=[shared_args_parser],
+                                            help="Validate an OrthoXML file")
     validate_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     validate_parser.set_defaults(func=handle_validation)
 
     # Stats subcommand
-    stats_parser = subparsers.add_parser("stats", help="Show statistics of the OrthoXML tree")
+    stats_parser = subparsers.add_parser("stats",
+                                         parents=[shared_args_parser],
+                                         help="Show statistics of the OrthoXML tree")
     stats_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     stats_parser.set_defaults(func=handle_stats)
 
     # Gene Stats
-    gene_stats_parser = subparsers.add_parser("gene-stats", help="Show gene statistics of the OrthoXML tree")
+    gene_stats_parser = subparsers.add_parser("gene-stats",
+                                              parents=[shared_args_parser],
+                                              help="Show gene statistics of the OrthoXML tree")
     gene_stats_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     gene_stats_parser.add_argument(
         "--outfile",
@@ -217,13 +231,17 @@ def main():
     gene_stats_parser.set_defaults(func=handle_gene_stats)
 
     # Taxonomy subcommand
-    tax_parser = subparsers.add_parser("taxonomy", help="Print the taxonomy tree")
+    tax_parser = subparsers.add_parser("taxonomy",
+                                       parents=[shared_args_parser],
+                                       help="Print the taxonomy tree")
     tax_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     tax_parser.set_defaults(func=handle_taxonomy)
 
     # Conversions
     ## OrthoXML to Newick (NHX)
-    converter_to_nhx_parser = subparsers.add_parser("to-nhx", help="Convert OrthoXML to Newick (NHX) format")
+    converter_to_nhx_parser = subparsers.add_parser("to-nhx",
+                                                    parents=[shared_args_parser],
+                                                    help="Convert OrthoXML to Newick (NHX) format")
     converter_to_nhx_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     converter_to_nhx_parser.add_argument("--outdir", required=True, help="Path to the folder where the trees will be saved")
     converter_to_nhx_parser.add_argument(
@@ -239,7 +257,9 @@ def main():
     converter_to_nhx_parser.set_defaults(func=handle_conversion_to_nhx)
 
     ## Newick (NHX) to OrthoXML
-    converter_from_nhx_parser = subparsers.add_parser("from-nhx", help="Convert Newick (NHX) to OrthoXML format")
+    converter_from_nhx_parser = subparsers.add_parser("from-nhx",
+                                                      parents=[shared_args_parser],
+                                                      help="Convert Newick (NHX) to OrthoXML format")
     converter_from_nhx_parser.add_argument(
         "--infile",
         nargs="+",  # Accept one or more input files
@@ -250,13 +270,17 @@ def main():
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
     ## OrthoGroup CSV to OrthoXML
-    converter_from_ortho_parser = subparsers.add_parser("from-csv", help="Convert OrthoGroup CSV to OrthoXML format")
+    converter_from_ortho_parser = subparsers.add_parser("from-csv",
+                                                        parents=[shared_args_parser],
+                                                        help="Convert OrthoGroup CSV to OrthoXML format")
     converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to OrthoGroup CSV file")
     converter_from_ortho_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_ortho_parser.set_defaults(func=handle_conversion_from_orthofinder)
 
     # Export pairs subcommand
-    export_parser = subparsers.add_parser("export-pairs", help="Export orthologous pairs")
+    export_parser = subparsers.add_parser("export-pairs",
+                                          parents=[shared_args_parser],
+                                          help="Export orthologous pairs")
     export_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     export_parser.add_argument("type", choices=["ortho", "para"], help="Type of export")
     export_parser.add_argument("--outfile", required=True, help="Output file to write the export")
@@ -275,7 +299,9 @@ def main():
     export_parser.set_defaults(func=handle_export_pairs)
 
     # Export OGs subcommand
-    export_og_parser = subparsers.add_parser("export-ogs", help="Export orthologous groups")
+    export_og_parser = subparsers.add_parser("export-ogs",
+                                             parents=[shared_args_parser],
+                                             help="Export orthologous groups")
     export_og_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     export_og_parser.add_argument("--outfile", required=True, help="Output file to write the export")
     export_og_parser.add_argument(
@@ -285,13 +311,17 @@ def main():
     export_og_parser.set_defaults(func=handle_export_ogs)
 
     # Split subcommand
-    split_parser = subparsers.add_parser("split", help="Split the tree by rootHOGs")
+    split_parser = subparsers.add_parser("split",
+                                         parents=[shared_args_parser],
+                                         help="Split the tree by rootHOGs")
     split_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     split_parser.add_argument("--outdir", required=True, help="Path to the folder where the splitted rootHOGs will be saved")
     split_parser.set_defaults(func=handle_split_streaming)
 
     # Filter subcommand
-    filter_parser = subparsers.add_parser("filter", help="Filter the OrthoXML tree by CompletenessScore.")
+    filter_parser = subparsers.add_parser("filter",
+                                          parents=[shared_args_parser],
+                                          help="Filter the OrthoXML tree by CompletenessScore.")
     filter_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
     filter_parser.add_argument(
         "--threshold",
@@ -309,10 +339,11 @@ def main():
         "--outfile",
         required=True,
         help="Write the filtered OrthoXML to this file"
-)
+    )
     filter_parser.set_defaults(func=handle_filter)
 
     args = parser.parse_args()
+    set_logger_level(args.log)
     args.func(args)
 
 if __name__ == "__main__":
