@@ -47,11 +47,11 @@ def handle_stats(args):
     with BasicStats(args.infile) as parser:
         for _ in parser.parse():
             pass
-        logger.info(f"Number of species: {parser.species_count}")
-        logger.info(f"Number of genes: {parser.gene_count}")
-        logger.info(f"Number of rootHOGs: {parser.rhog_count}")
-        logger.info(f"Number of leave taxa: {parser.leave_taxon_count}")
-        logger.info(f"Total number of taxa: {parser.all_taxa_count}")
+        print(f"Number of species: {parser.species_count}")
+        print(f"Number of genes: {parser.gene_count}")
+        print(f"Number of rootHOGs: {parser.rhog_count}")
+        print(f"Number of leave taxa: {parser.leave_taxon_count}")
+        print(f"Total number of taxa: {parser.all_taxa_count}")
 
 def handle_gene_stats(args):
     with GenePerTaxonStats(args.infile) as parser:
@@ -62,9 +62,9 @@ def handle_gene_stats(args):
         if args.outfile:
             with open(args.outfile, 'w') as outfile:
                 json.dump(parser.taxonomy_counts, outfile, indent=4)
-            logger.info(f"Gene count per taxon written to {args.outfile}")
+            print(f"Gene count per taxon written to {args.outfile}")
         else:
-            logger.info(parser.taxonomy_counts)
+            print(parser.taxonomy_counts)
 
 def handle_taxonomy(args):
     with PrintTaxonomy(args.infile) as parser:

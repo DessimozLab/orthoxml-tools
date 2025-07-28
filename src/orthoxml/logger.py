@@ -1,7 +1,6 @@
 # logger.py
 
 import logging
-import sys
 
 # Configure the base logger
 logger = logging.getLogger("orthoxml")
@@ -14,7 +13,7 @@ console_formatter = logging.Formatter(
 )
 
 # Console handler
-console_handler = logging.StreamHandler(sys.stdout)
+console_handler = logging.StreamHandler()
 console_handler.setFormatter(console_formatter)
 
 # Add handlers
