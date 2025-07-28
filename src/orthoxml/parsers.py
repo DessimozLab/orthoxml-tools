@@ -1,5 +1,5 @@
 # parsers.py
-
+import os.path
 from logging import getLogger
 from os import PathLike
 from typing import Union, IO, Any, Optional
@@ -110,7 +110,7 @@ class StreamOrthoXMLParser:
         if self._should_close:
             self.stream.close()
 
-    def parse_all(self):
+    def parse_through(self):
         for _ in self.parse():
             pass
 
@@ -183,6 +183,13 @@ def process_stream_orthoxml(
         parser_kwargs=dict(),
         writer_kwargs=dict(),
 ):
+    # only mkdir if outfile is actually a path
+    if isinstance(outfile, (str, PathLike)):
+        outpath = str(outfile)
+        parent_dir = os.path.dirname(outpath)
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
+
     with parser_cls(infile, **parser_kwargs) as parser:
         root_tag, nsmap, attrib = parser.root_tag, parser.nsmap, parser.root_attribs
         with writer_cls(outfile, root_tag=root_tag, xmlns=nsmap[''], attrib=attrib, **writer_kwargs) as writer:

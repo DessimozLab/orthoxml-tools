@@ -15,7 +15,8 @@ from orthoxml.custom_parsers import (
     GenePerTaxonStats,
     PrintTaxonomy,
     RootHOGCounter,
-    SplitterByRootHOGS,
+    IndexNthRootHOG,
+    OutputNthRootHOG,
     StreamPairsParser,
     GetGene2IdMapping,
     StreamMaxOGParser,
@@ -137,16 +138,22 @@ def handle_export_ogs(args):
 def handle_split_streaming(args):
     infile_name = args.infile.split("/")[-1]
 
-    with RootHOGCounter(args.infile) as parser:
-        for _ in parser.parse():
-            pass
-        print(f"Count {parser.rhogs_count}")
+    with RootHOGCounter(args.infile) as counter:
+        counter.parse_through()
+        logger.info(f"Processing {counter.rhogs_count} root-level groups...")
 
-    for rhog in range(1, parser.rhogs_count + 1):
-        process_stream_orthoxml(args.infile,
-                        os.path.join(args.outdir, f"{rhog}_{infile_name}"),
-                        parser_cls=SplitterByRootHOGS,
-                        parser_kwargs={"rhogs_number": rhog})
+    for rhog in range(1, counter.rhogs_count + 1):
+
+        with IndexNthRootHOG(args.infile, rhog) as index:
+            index.parse_through()
+            logger.debug(f"Group {rhog} has {len(index.present_genes)} gene refs")
+
+            process_stream_orthoxml(args.infile,
+                                    os.path.join(args.outdir, f"{rhog}_{infile_name}"),
+                                    parser_cls=OutputNthRootHOG,
+                                    parser_kwargs={
+                                        "rhogs_number": rhog,
+                                        "present_genes": index.present_genes})
 
 def handle_conversion_to_nhx(args):
     infile = args.infile
