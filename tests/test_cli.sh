@@ -81,6 +81,8 @@ orthoxml-tools to-nhx \
 echo -e "\n[10] Test: Newick (NHX) to OrthoXML conversion"
 orthoxml-tools from-nhx --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx.orthoxml"
 orthoxml-tools from-nhx --infile "$EXAMPLES_DIR/sample2.nhx" "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx21.orthoxml"
+orthoxml-tools from-nhx --species-encode "nhx" --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx_nhxspecies.orthoxml"
+
 
 echo -e "\n[11] Test: Orthofinder CSV to OrthoXML conversion"
 orthoxml-tools from-csv --infile examples/data/InputOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
