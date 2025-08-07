@@ -77,8 +77,9 @@ class GeneRefHelper:
         self._species_cnt += 1
         sp_node = ET.Element("species", dict(name=species, NCBITaxId=str(self._species_cnt)))
         sp_db_node = ET.SubElement(sp_node, "database", dict(name=species, version="n/a"))
+        sp_db_genes_node = ET.SubElement(sp_db_node, "genes")
         self._xml_root.insert(-1, sp_node)
-        self._species2node[species] = sp_db_node
+        self._species2node[species] = sp_db_genes_node
 
     def get_species_node(self, species):
         if not species in self._species2node:
