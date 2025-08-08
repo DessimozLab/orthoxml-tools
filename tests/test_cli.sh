@@ -9,12 +9,14 @@ INFILE="$EXAMPLES_DIR/ex3-int-taxon.orthoxml"
 FILTER_INFILE="$EXAMPLES_DIR/sample-for-filter.orthoxml"
 VALIDATE_INFILE="$EXAMPLES_DIR/ex3.orthoxml"
 MULTIPLE_RHOGS_INFILE="$EXAMPLES_DIR/ex4-int-taxon-multiple-rhogs.orthoxml"
-OUT_GENE_STATS="tests_output/gene_stats.json"
-OUT_EXPORT_PAIRS="tests_output/export_pairs.tsv"
-OUT_FILTERED="tests_output/filtered.orthoxml"
-OUT_EXPORT_OGS="tests_output/ogs.tsv"
+OUT_DIR="tests_output"
+OUT_GENE_STATS="$OUT_DIR/gene_stats.json"
+OUT_EXPORT_PAIRS="$OUT_DIR/export_pairs.tsv"
+OUT_FILTERED="$OUT_DIR/filtered.orthoxml"
+OUT_EXPORT_OGS="$OUT_DIR/ogs.tsv"
 
 echo "Running orthoxml CLI tests..."
+mkdir -p $OUT_DIR
 
 echo -e "\n[1] Test: stats"
 orthoxml-tools stats --infile "$INFILE"
