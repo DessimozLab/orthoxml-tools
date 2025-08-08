@@ -32,4 +32,4 @@ jobs:
 
       - name: Run CLI tests
         run:  |
-          tests/cli_test.sh
+          tests/test_cli.sh
