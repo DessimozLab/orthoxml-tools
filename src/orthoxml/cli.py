@@ -8,7 +8,7 @@ from lxml import etree
 from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
-from orthoxml.converters.from_nhx import orthoxml_from_newicktrees
+from orthoxml.converters.from_nhx import (orthoxml_from_newicktrees, nhx_species_encoded_leaf)
 from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
 from orthoxml.custom_parsers import (
     BasicStats,
@@ -178,11 +178,15 @@ def handle_conversion_to_nhx(args):
     logger.info("You can visualise each tree using https://beta.phylo.io/viewer/ as extended newick format.")
 
 def handle_conversion_from_nhx(args):
+    if args.species_encode == "nhx":
+        species_encode = nhx_species_encoded_leaf
+    else:
+        species_encode = None
     orthoxml_from_newicktrees(
         args.infile,
         args.outfile,
         label_to_event=None, 
-        label_to_id_and_species=None
+        label_to_id_and_species=species_encode
     )
 
 def handle_conversion_from_orthofinder(args):
@@ -277,6 +281,13 @@ def main():
         required=True,
         help="Paths to one or more Newick (NHX) files"
     )
+    converter_from_nhx_parser.add_argument(
+        "--species-encode",
+        required=False,
+        choices=("nhx", "underscore"),
+        help="Way how species/taxonomic levels are encoded in the input Newick files. 'nhx' means that the "
+             "species/taxonomic levels are encoded in the Newick file using the NHX comments S= or T=, 'underscore' "
+             "means that the species/taxonomic levels are encoded in the Newick file using underscores.")
     converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
