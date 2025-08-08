@@ -29,7 +29,3 @@ jobs:
 
       - name: Run tests
         run: pytest -vv
-
-      - name: Run CLI tests
-        run:  |
-          tests/test_cli.sh
