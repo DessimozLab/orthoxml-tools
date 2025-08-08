@@ -29,7 +29,7 @@ def nhx_to_event(node):
                 return "speciation"
             logger.error(f"Cannot parse annotation Ev={is_Ev}. Invalid format")
             raise ValueError(f"Cannot parse annotation Ev={is_Ev}")
-    logger.info("no annotations found for node %s. Assuming speciation", node)
+    logger.debug("no annotations found for node %s. Assuming speciation", node)
     return "speciation"
 
 
@@ -247,6 +247,7 @@ def orthoxml_from_newicktrees(nwkfiles, output, label_to_event=None, label_to_id
         label_to_id_and_species = label_with_species_end
     builder = OrthoXMLBuilder()
     for nwkfile in nwkfiles:
-        tree = dendropy.Tree.get_from_path(nwkfile, schema="newick", preserve_underscores=True)
-        builder.add_group(tree, label_to_event=label_to_event, label_to_id_and_species=label_to_id_and_species)
+        for c, tree in enumerate(dendropy.TreeList.get_from_path(nwkfile, schema="newick", preserve_underscores=True), 1):
+            builder.add_group(tree, label_to_event=label_to_event, label_to_id_and_species=label_to_id_and_species)
+        logger.info("processed %d trees from %s", c, nwkfile)
     builder.write(output)
