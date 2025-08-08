@@ -166,3 +166,26 @@ def test_convert_nhx_to_orthoxml(single_nhx_example_file):
     assert len(oxml.findall(".//oxml:groups/oxml:orthologGroup", NS)) == 1, "Expected one ortholog group in the output"
     assert len(oxml.findall(".//oxml:geneRef", NS)) == 14, "Expected 14 gene references in the output"
     assert len(oxml.findall(".//oxml:paralogGroup", NS)) == 6, "Expected 6 paralog groups in the output"
+
+
+@pytest.fixture
+def multiple_nhx_example_file():
+    return [Path(__file__).parent / "test-data" / "multiple_gene_trees.nwk"]
+
+
+def test_convert_multi_nhx_to_orthoxml(multiple_nhx_example_file):
+    """ensure reading and writing of orthoxml works results in the same content"""
+    out_stream = BytesIO()
+    orthoxml_from_newicktrees(multiple_nhx_example_file, out_stream, label_to_id_and_species=nhx_species_encoded_leaf)
+    out_stream.seek(0)
+
+    print(out_stream.getvalue())
+    oxml = ET.parse(out_stream)
+    root = oxml.getroot()
+    assert root.tag.endswith("orthoXML")
+    NS = {'oxml': 'http://orthoXML.org/2011/'}
+    assert len(oxml.findall("oxml:species", NS)) == 6, "Expected 6 species in the output"
+    assert len(oxml.findall(".//oxml:gene", NS)) == 14, "Expected 14 genes in the output"
+    assert len(oxml.findall(".//oxml:groups/oxml:orthologGroup", NS)) == 2, "Expected one ortholog group in the output"
+    assert len(oxml.findall(".//oxml:geneRef", NS)) == 14, "Expected 14 gene references in the output"
+    assert len(oxml.findall(".//oxml:paralogGroup", NS)) == 4, "Expected 4 paralog groups in the output"
