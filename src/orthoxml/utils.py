@@ -3,10 +3,15 @@
 import bz2
 import gzip
 import os
+import sys
 from io import BytesIO
-from importlib import resources
+if sys.version_info >= (3, 10):
+    from importlib.resources import files
+else:
+    from importlib_resources import files
 from lxml import etree
 from .logger import logger
+
 
 # File opening. This is based on the example on SO here:
 # http://stackoverflow.com/a/26986344
@@ -63,7 +68,7 @@ def validate_xml(xml_file_path: str, orthoxml_version: str) -> bool:
     try:
         # Load XSD schema from package resources
         schema_filename = f'orthoxml-{orthoxml_version}.xsd'
-        with resources.files('orthoxml.schemas').joinpath(schema_filename).open('rb') as schema_file:
+        with files('orthoxml.schemas').joinpath(schema_filename).open('rb') as schema_file:
             schema_root = etree.XML(schema_file.read())
             schema = etree.XMLSchema(schema_root)
 
