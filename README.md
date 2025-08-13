@@ -215,7 +215,7 @@ orthoxml-tools to-nhx --infile examples/data/sample-for-nhx.orthoxml --outdir ./
 Convert Newick (NHX) format to OrthoXML.
 
 ```bash
-orthoxml-tools from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml
+orthoxml-tools from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml [--species-encode nhx|underscore]
 ```
 
 **Options:**
@@ -223,11 +223,18 @@ orthoxml-tools from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxm
   - You can specify multiple files by providing them as a space-separated list.
   - If you provide multiple files, they will be combined into a single OrthoXML output.
 - `--outfile <folder>`: Specify the output OrthoXML file (required).
+- `--species-encode <nhx|underscore>`: How species/taxonomic levels are encoded in the Newick files.
+    nhx → Species encoded in NHX comments using S= or T= tags. For example: (A_s1:0.1[&&NHX:conf=0.9:S=s1],B_s2:0.2[&&NHX:conf=0.8:S=s2]);
+    underscore → Species encoded in leaf labels using underscores (e.g., GeneID_SpeciesID).
 
 **Example:**
 ```bash
 orthoxml-tools from-nhx --infile examples/data/sample.nhx --outfile ./tests_output/from_nhx.orthoxml
 orthoxml-tools from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
+orthoxml-tools from-nhx \
+  --species-encode nhx \
+  --infile examples/data/sample.nhx \
+  --outfile tests_output/from_nhx_nhxspecies.orthoxml
 ```
 
 ### 🛠️ CSV to OrthoXML (exploratory feature)
