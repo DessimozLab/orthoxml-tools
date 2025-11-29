@@ -377,8 +377,6 @@ class OrthoXMLBuilder:
                 # Add id second (for root groups)
                 if parent_grp_node is None:
                     attributes["id"] = "{}".format(hogid)
-
-                if parent_grp_node is None:
                     hog_node = ET.SubElement(self.grps, gtyp, attributes)
                 else:
                     hog_node = ET.SubElement(parent_grp_node, gtyp, attributes)
