@@ -10,6 +10,8 @@ from orthoxml.converters.from_nhx import (
     nhx_species_encoded_leaf,
     label_with_species_end,
     nhx_to_event,
+    nhx_taxonomy_node_name,
+    TaxonomyBuilder,
     OrthoXMLBuilder,
     GeneRefHelper
 )
@@ -88,6 +90,89 @@ def test_nhx_to_event_Ev_duplication(dendro_node):
 def test_nhx_to_event_Ev_speciation(dendro_node):
     dendro_node.annotations.add_new("Ev", "0>1>0>spec>t")
     assert nhx_to_event(dendro_node) == "speciation"
+
+
+# -------------------------
+# Taxonomy function tests
+# -------------------------
+
+def test_nhx_taxonomy_node_name():
+    """Test extracting taxonomy node names from NHX annotations"""
+    # Test T annotation
+    tree = make_tree_from_str("(A,B)[&&NHX:T=NODE_1];")
+    root = tree.seed_node
+    assert nhx_taxonomy_node_name(root) == "NODE_1"
+
+    # Test name annotation
+    tree = make_tree_from_str("(A,B)[&&NHX:name=NODE_2];")
+    root = tree.seed_node
+    assert nhx_taxonomy_node_name(root) == "NODE_2"
+
+    # Test S annotation (for leaf nodes)
+    tree = make_tree_from_str("(A,B)[&&NHX:S=SPECIES_1];")
+    root = tree.seed_node
+    assert nhx_taxonomy_node_name(root) == "SPECIES_1"
+
+    # Test T takes precedence over name
+    tree = make_tree_from_str("(A,B)[&&NHX:T=NODE_T:name=NODE_NAME];")
+    root = tree.seed_node
+    assert nhx_taxonomy_node_name(root) == "NODE_T"
+
+    # Test no annotations
+    tree = make_tree_from_str("(A,B);")
+    root = tree.seed_node
+    assert nhx_taxonomy_node_name(root) is None
+
+
+def test_taxonomy_builder():
+    """Test TaxonomyBuilder functionality"""
+    builder = TaxonomyBuilder()
+
+    # Add some species
+    builder.add_species("Human")
+    builder.add_species("Mouse")
+
+    # Check species IDs are assigned
+    assert builder._species_to_taxon_id["Human"] == 1
+    assert builder._species_to_taxon_id["Mouse"] == 2
+
+
+def test_taxonomy_from_nhx_tree():
+    """Test building taxonomy from NHX tree with T annotations"""
+    newick_str = "((A[&&NHX:S=HUMAN]:0.1,B[&&NHX:S=MOUSE]:0.1)[&&NHX:T=MAMMALS]:0.1,C[&&NHX:S=FISH]:0.2)[&&NHX:T=VERTEBRATES];"
+    tree = make_tree_from_str(newick_str)
+
+    builder = TaxonomyBuilder()
+    builder.build_from_tree(tree, nhx_species_encoded_leaf)
+
+    # Check species were added
+    assert "HUMAN" in builder._species_to_taxon_id
+    assert "MOUSE" in builder._species_to_taxon_id
+    assert "FISH" in builder._species_to_taxon_id
+
+    # Check internal nodes were added
+    assert "MAMMALS" in builder._internal_nodes
+    assert "VERTEBRATES" in builder._internal_nodes
+
+    # Check tree structure
+    assert "VERTEBRATES" in builder._taxonomy_tree
+    assert "MAMMALS" in builder._taxonomy_tree["VERTEBRATES"]
+    assert "FISH" in builder._taxonomy_tree["VERTEBRATES"]
+    assert "HUMAN" in builder._taxonomy_tree["MAMMALS"]
+    assert "MOUSE" in builder._taxonomy_tree["MAMMALS"]
+
+
+def test_taxonomy_from_nhx_tree_name():
+    """Test building taxonomy from NHX tree with name annotations"""
+    newick_str = "((A[&&NHX:S=HUMAN]:0.1,B[&&NHX:S=MOUSE]:0.1)[&&NHX:name=MAMMALS]:0.1,C[&&NHX:S=FISH]:0.2)[&&NHX:name=VERTEBRATES];"
+    tree = make_tree_from_str(newick_str)
+
+    builder = TaxonomyBuilder()
+    builder.build_from_tree(tree, nhx_species_encoded_leaf)
+
+    # Check internal nodes were added
+    assert "MAMMALS" in builder._internal_nodes
+    assert "VERTEBRATES" in builder._internal_nodes
 
 
 # -------------------------
@@ -189,3 +274,75 @@ def test_convert_multi_nhx_to_orthoxml(multiple_nhx_example_file):
     assert len(oxml.findall(".//oxml:groups/oxml:orthologGroup", NS)) == 2, "Expected one ortholog group in the output"
     assert len(oxml.findall(".//oxml:geneRef", NS)) == 14, "Expected 14 gene references in the output"
     assert len(oxml.findall(".//oxml:paralogGroup", NS)) == 4, "Expected 4 paralog groups in the output"
+
+
+def test_taxonomy_xml_generation():
+    """Test that OrthoXMLBuilder includes taxonomy section"""
+    newick_str = "((A[&&NHX:S=HUMAN]:0.1,B[&&NHX:S=MOUSE]:0.1)[&&NHX:T=MAMMALS]:0.1,C[&&NHX:S=FISH]:0.2)[&&NHX:T=VERTEBRATES];"
+    tree = make_tree_from_str(newick_str)
+
+    builder = OrthoXMLBuilder(origin="test_taxonomy")
+    builder.add_group(tree, label_to_event=nhx_to_event, label_to_id_and_species=nhx_species_encoded_leaf)
+
+    output = BytesIO()
+    builder.write(output)
+    output.seek(0)
+
+    doc = ET.parse(output)
+    root = doc.getroot()
+
+    # Check taxonomy section exists
+    NS = {'oxml': 'http://orthoXML.org/2011/'}
+    taxonomy_nodes = root.findall("oxml:taxonomy", NS)
+    assert len(taxonomy_nodes) == 1, "Expected exactly one taxonomy section"
+
+    # Check taxon elements exist
+    taxon_nodes = root.findall(".//oxml:taxon", NS)
+    assert len(taxon_nodes) >= 5, f"Expected at least 5 taxon nodes, got {len(taxon_nodes)}"
+
+    # Check species are included
+    taxon_names = [node.get('name') for node in taxon_nodes]
+    assert 'HUMAN' in taxon_names
+    assert 'MOUSE' in taxon_names
+    assert 'FISH' in taxon_names
+    assert 'MAMMALS' in taxon_names
+    assert 'VERTEBRATES' in taxon_names
+
+
+def test_ortholog_group_taxon_ids():
+    """Test that orthologGroup elements have correct taxonId attributes"""
+    newick_str = "((A[&&NHX:S=HUMAN]:0.1,B[&&NHX:S=MOUSE]:0.1)[&&NHX:T=MAMMALS]:0.1,C[&&NHX:S=FISH]:0.2)[&&NHX:T=VERTEBRATES];"
+    tree = make_tree_from_str(newick_str)
+
+    builder = OrthoXMLBuilder(origin="test_taxon_ids")
+    builder.add_group(tree, label_to_event=nhx_to_event, label_to_id_and_species=nhx_species_encoded_leaf)
+
+    output = BytesIO()
+    builder.write(output)
+    output.seek(0)
+
+    doc = ET.parse(output)
+    root = doc.getroot()
+
+    # Get taxonomy to build name -> id mapping
+    NS = {'oxml': 'http://orthoXML.org/2011/'}
+    taxon_nodes = root.findall(".//oxml:taxon", NS)
+    taxon_name_to_id = {node.get('name'): node.get('id') for node in taxon_nodes}
+
+    # Check orthologGroup elements have taxonId attributes
+    ortho_groups = root.findall(".//oxml:orthologGroup", NS)
+    assert len(ortho_groups) >= 2, "Expected at least 2 ortholog groups"
+
+    # Check that some ortholog groups have taxonId attributes
+    groups_with_taxon_id = [g for g in ortho_groups if g.get('taxonId')]
+    assert len(groups_with_taxon_id) >= 1, "Expected at least one ortholog group with taxonId"
+
+    # Verify taxonId values are valid (exist in taxonomy)
+    all_taxon_ids = set(taxon_name_to_id.values())
+    for group in groups_with_taxon_id:
+        taxon_id = group.get('taxonId')
+        assert taxon_id in all_taxon_ids, f"taxonId {taxon_id} not found in taxonomy"
+
+    print(f"Found {len(groups_with_taxon_id)} ortholog groups with taxonId attributes")
+    for group in groups_with_taxon_id:
+        print(f"  Group with taxonId={group.get('taxonId')}")
