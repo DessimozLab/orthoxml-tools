@@ -363,10 +363,25 @@ class OrthoXMLBuilder:
                     parent_grp_node = node.parent_node.hog_node
 
                 gtyp = "orthologGroup" if typ=="speciation" else "paralogGroup"
+
+                # Prepare attributes for the group node
+                attributes = {}
+
+                # Add taxonId for orthologGroup (speciation events) FIRST
+                if gtyp == "orthologGroup":
+                    taxon_name = nhx_taxonomy_node_name(node)
+                    if taxon_name:
+                        taxon_id = self._taxonomy_builder._get_or_create_taxon_id(taxon_name)
+                        attributes["taxonId"] = str(taxon_id)
+
+                # Add id second (for root groups)
                 if parent_grp_node is None:
-                    hog_node = ET.SubElement(self.grps, gtyp, dict(id="{}".format(hogid)))
+                    attributes["id"] = "{}".format(hogid)
+
+                if parent_grp_node is None:
+                    hog_node = ET.SubElement(self.grps, gtyp, attributes)
                 else:
-                    hog_node = ET.SubElement(parent_grp_node, gtyp)
+                    hog_node = ET.SubElement(parent_grp_node, gtyp, attributes)
                 node.hog_node = hog_node
 
 

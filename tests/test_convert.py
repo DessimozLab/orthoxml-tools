@@ -307,3 +307,42 @@ def test_taxonomy_xml_generation():
     assert 'FISH' in taxon_names
     assert 'MAMMALS' in taxon_names
     assert 'VERTEBRATES' in taxon_names
+
+
+def test_ortholog_group_taxon_ids():
+    """Test that orthologGroup elements have correct taxonId attributes"""
+    newick_str = "((A[&&NHX:S=HUMAN]:0.1,B[&&NHX:S=MOUSE]:0.1)[&&NHX:T=MAMMALS]:0.1,C[&&NHX:S=FISH]:0.2)[&&NHX:T=VERTEBRATES];"
+    tree = make_tree_from_str(newick_str)
+
+    builder = OrthoXMLBuilder(origin="test_taxon_ids")
+    builder.add_group(tree, label_to_event=nhx_to_event, label_to_id_and_species=nhx_species_encoded_leaf)
+
+    output = BytesIO()
+    builder.write(output)
+    output.seek(0)
+
+    doc = ET.parse(output)
+    root = doc.getroot()
+
+    # Get taxonomy to build name -> id mapping
+    NS = {'oxml': 'http://orthoXML.org/2011/'}
+    taxon_nodes = root.findall(".//oxml:taxon", NS)
+    taxon_name_to_id = {node.get('name'): node.get('id') for node in taxon_nodes}
+
+    # Check orthologGroup elements have taxonId attributes
+    ortho_groups = root.findall(".//oxml:orthologGroup", NS)
+    assert len(ortho_groups) >= 2, "Expected at least 2 ortholog groups"
+
+    # Check that some ortholog groups have taxonId attributes
+    groups_with_taxon_id = [g for g in ortho_groups if g.get('taxonId')]
+    assert len(groups_with_taxon_id) >= 1, "Expected at least one ortholog group with taxonId"
+
+    # Verify taxonId values are valid (exist in taxonomy)
+    all_taxon_ids = set(taxon_name_to_id.values())
+    for group in groups_with_taxon_id:
+        taxon_id = group.get('taxonId')
+        assert taxon_id in all_taxon_ids, f"taxonId {taxon_id} not found in taxonomy"
+
+    print(f"Found {len(groups_with_taxon_id)} ortholog groups with taxonId attributes")
+    for group in groups_with_taxon_id:
+        print(f"  Group with taxonId={group.get('taxonId')}")
