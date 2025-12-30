@@ -126,7 +126,7 @@ Choose which pair type to export:
 **Options:**
 - `--infile <file>`: Input OrthoXML file (required).
 - `--outfile <file>`: Write output CSV to this file (required).
-- `--id <tag>`: Gene attribute to use as identifier (default: id).
+- `--id <tag>`: Gene attribute to use as identifier (default: id). other values: protId, geneId
 - `--chunk-size <number>`: Number of pairs to process per chunk (default: 20_000).
 - `--buffer-size <bytes>`: I/O buffer size in bytes (default: 4194304).
 
