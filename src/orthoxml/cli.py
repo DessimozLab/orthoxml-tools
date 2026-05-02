@@ -181,7 +181,7 @@ def handle_conversion_from_nhx(args):
     if args.species_encode == "nhx":
         species_encode = nhx_species_encoded_leaf
     else:
-        species_encode = None
+        species_encode = None  # orthoxml_from_newicktrees defaults to label_with_species_end (underscore)
     orthoxml_from_newicktrees(
         args.infile,
         args.outfile,
@@ -284,10 +284,12 @@ def main():
     converter_from_nhx_parser.add_argument(
         "--species-encode",
         required=False,
+        default="underscore",
         choices=("nhx", "underscore"),
         help="Way how species/taxonomic levels are encoded in the input Newick files. 'nhx' means that the "
              "species/taxonomic levels are encoded in the Newick file using the NHX comments S= or T=, 'underscore' "
-             "means that the species/taxonomic levels are encoded in the Newick file using underscores.")
+             "means that the species/taxonomic levels are encoded in the Newick file using underscores. "
+             "(default: underscore)")
     converter_from_nhx_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_nhx_parser.set_defaults(func=handle_conversion_from_nhx)
 
