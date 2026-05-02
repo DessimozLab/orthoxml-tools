@@ -100,10 +100,7 @@ def handle_export_pairs(args):
         for count, (r_id, s_id) in enumerate(parser.iter_pairs(), 1):
             # prepare bytes once
             if args.id != "id":
-                print(r_id, s_id)
                 r_id, s_id = mapping.get(r_id, r_id), mapping.get(s_id, s_id)
-                print(r_id, s_id)
-                print()
             lines.append(f"{r_id}\t{s_id}\n".encode('utf8'))
             if count % chunk_size == 0:
                 write(b''.join(lines))
