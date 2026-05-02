@@ -40,13 +40,10 @@ def handle_validation(args):
         raise Exception("Missing OrthoXML version attribute in the root element.")
 
     if not validate_xml(args.infile, orthoxml_version):
-        raise Exception(
-            f"OrthoXML file '{args.infile}' is not valid for version {orthoxml_version}"
-        )
+        print(f"INVALID: '{args.infile}' does not conform to OrthoXML version {orthoxml_version}")
+        raise SystemExit(1)
 
-    logger.info(
-        f"OrthoXML file '{args.infile}' is valid for version {orthoxml_version}"
-    )
+    print(f"OK: '{args.infile}' is valid OrthoXML version {orthoxml_version}")
 
 def handle_stats(args):
     with BasicStats(args.infile) as parser:
