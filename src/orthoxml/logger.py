@@ -4,7 +4,7 @@ import logging
 
 # Configure the base logger
 logger = logging.getLogger("orthoxml")
-logging_level = logging.WARNING
+logging_level = logging.INFO
 
 # Create formatters
 console_formatter = logging.Formatter(
