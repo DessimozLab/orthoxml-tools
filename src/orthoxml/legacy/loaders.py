@@ -37,9 +37,7 @@ def load_orthoxml_file(filepath: str, validate: bool = False) -> etree.ElementTr
             raise OrthoXMLParsingError(
                 f"OrthoXML file is not valid for version {orthoxml_version}"
             )
-        logger.info(
-            f"OrthoXML file '{filepath}' is valid for version {orthoxml_version}"
-        )
+        print(f"OrthoXML file '{filepath}' is valid for version {orthoxml_version}")
 
     return tree
 
