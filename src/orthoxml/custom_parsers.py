@@ -84,6 +84,9 @@ class GenePerTaxonStats(StreamOrthoXMLParser):
         Called once for each top-level <orthologGroup> or <paralogGroup>.
         Count all geneRef's per species under this group.
         """
+        if self.taxonomy_tree is None:
+            return None
+
         gene_ref_tag = f"{{{self._ns}}}geneRef"
 
         # find every geneRef anywhere inside this group
@@ -136,8 +139,9 @@ class GenePerTaxonStats(StreamOrthoXMLParser):
             return cnt
 
         if self.taxonomy_tree is None:
-            logger.warning("No taxonomy tree found. Cannot compute taxon counts.")
-            return 0
+            logger.warning("No taxonomy tree found. Falling back to per-species gene counts.")
+            self.taxonomy_counts = dict(self.header_gene_count_per_species)
+            return
         recurse(self.taxonomy_tree)
 
 class PrintTaxonomy(StreamOrthoXMLParser):
