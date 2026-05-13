@@ -21,7 +21,7 @@ from orthoxml.custom_parsers import (
     GetGene2IdMapping,
     StreamMaxOGParser,
 )
-from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str
+from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str, subset_orthoxml
 from orthoxml.logger import get_logger, set_logger_level
 from orthoxml.utils import validate_xml
 
@@ -196,6 +196,31 @@ def handle_filter(args):
                 strategy=args.strategy)
 
 
+def handle_subset(args):
+    species_names = list(args.species) if args.species else []
+    if args.species_file:
+        with open(args.species_file) as fh:
+            species_names += [line.strip() for line in fh if line.strip()]
+
+    hog_ids = list(args.hog_ids) if args.hog_ids else []
+    if args.hog_ids_file:
+        with open(args.hog_ids_file) as fh:
+            hog_ids += [line.strip() for line in fh if line.strip()]
+
+    if not species_names and not hog_ids:
+        raise SystemExit(
+            "error: subset requires at least one of "
+            "--species/--species-file or --hog-ids/--hog-ids-file"
+        )
+
+    subset_orthoxml(
+        args.infile,
+        args.outfile,
+        species_names=species_names if species_names else None,
+        hog_ids=hog_ids if hog_ids else None,
+    )
+
+
 def main():
     # Parser for shared options between commands
     shared_args_parser = argparse.ArgumentParser(add_help=False)
@@ -359,6 +384,38 @@ def main():
         help="Write the filtered OrthoXML to this file"
     )
     filter_parser.set_defaults(func=handle_filter)
+
+    # Subset subcommand
+    subset_parser = subparsers.add_parser(
+        "subset",
+        parents=[shared_args_parser],
+        help="Subset an OrthoXML file by species and/or HOG IDs",
+    )
+    subset_parser.add_argument("--infile", required=True, help="Path to the input OrthoXML file")
+    subset_parser.add_argument("--outfile", required=True, help="Path to write the output OrthoXML file")
+    subset_parser.add_argument(
+        "--species",
+        nargs="+",
+        metavar="SPECIES",
+        help="One or more species names to keep (e.g. 'Homo sapiens' 'Mus musculus')",
+    )
+    subset_parser.add_argument(
+        "--species-file",
+        metavar="FILE",
+        help="File with one species name per line",
+    )
+    subset_parser.add_argument(
+        "--hog-ids",
+        nargs="+",
+        metavar="HOG_ID",
+        help="One or more HOG IDs to extract as new root HOGs (any nesting level)",
+    )
+    subset_parser.add_argument(
+        "--hog-ids-file",
+        metavar="FILE",
+        help="File with one HOG ID per line",
+    )
+    subset_parser.set_defaults(func=handle_subset)
 
     args = parser.parse_args()
     set_logger_level(args.log)

@@ -7,6 +7,7 @@ set -u  # Treat unset variables as errors
 EXAMPLES_DIR="examples/data"
 INFILE="$EXAMPLES_DIR/ex3-int-taxon.orthoxml"
 FILTER_INFILE="$EXAMPLES_DIR/sample-for-filter.orthoxml"
+SUBSET_INFILE="$EXAMPLES_DIR/sample-for-subset.orthoxml"
 VALIDATE_INFILE="$EXAMPLES_DIR/ex3.orthoxml"
 MULTIPLE_RHOGS_INFILE="$EXAMPLES_DIR/ex4-int-taxon-multiple-rhogs.orthoxml"
 OUT_DIR="tests_output"
@@ -14,6 +15,7 @@ OUT_GENE_STATS="$OUT_DIR/gene_stats.json"
 OUT_EXPORT_PAIRS="$OUT_DIR/export_pairs.tsv"
 OUT_FILTERED="$OUT_DIR/filtered.orthoxml"
 OUT_EXPORT_OGS="$OUT_DIR/ogs.tsv"
+OUT_SUBSET="$OUT_DIR/subset.orthoxml"
 
 echo "Running orthoxml CLI tests..."
 mkdir -p $OUT_DIR
@@ -74,30 +76,75 @@ orthoxml-tools filter \
     --outfile "$OUT_FILTERED"
 cat "$OUT_FILTERED"
 
-echo -e "\n[9] Test: OrthoXML to NHX conversion"
+echo -e "\n[9.1] Test: subset by species"
+orthoxml-tools subset \
+    --infile "$SUBSET_INFILE" \
+    --outfile "$OUT_SUBSET" \
+    --species "Homo sapiens" "Mus musculus"
+orthoxml-tools stats --infile "$OUT_SUBSET"
+
+echo -e "\n[9.2] Test: subset by HOG ID (nested HOG promoted to root)"
+orthoxml-tools subset \
+    --infile "$SUBSET_INFILE" \
+    --outfile "$OUT_SUBSET" \
+    --hog-ids HOG_Opistokonta
+orthoxml-tools stats --infile "$OUT_SUBSET"
+
+echo -e "\n[9.3] Test: subset by two independent HOG IDs"
+orthoxml-tools subset \
+    --infile "$SUBSET_INFILE" \
+    --outfile "$OUT_SUBSET" \
+    --hog-ids HOG_Sauria HOG_Viridiplantae
+orthoxml-tools stats --infile "$OUT_SUBSET"
+
+echo -e "\n[9.4] Test: subset by HOG ID + species combined"
+orthoxml-tools subset \
+    --infile "$SUBSET_INFILE" \
+    --outfile "$OUT_SUBSET" \
+    --hog-ids HOG_Opistokonta \
+    --species "Homo sapiens" "Mus musculus"
+orthoxml-tools stats --infile "$OUT_SUBSET"
+
+echo -e "\n[9.5] Test: subset with --species-file"
+printf "Gallus gallus\nChelonia mydas\n" > "$OUT_DIR/species_list.txt"
+orthoxml-tools subset \
+    --infile "$SUBSET_INFILE" \
+    --outfile "$OUT_SUBSET" \
+    --species-file "$OUT_DIR/species_list.txt"
+orthoxml-tools stats --infile "$OUT_SUBSET"
+
+echo -e "\n[9.6] Test: subset with --hog-ids-file"
+printf "HOG_Sauria\nHOG_Viridiplantae\n" > "$OUT_DIR/hog_ids_list.txt"
+orthoxml-tools subset \
+    --infile "$SUBSET_INFILE" \
+    --outfile "$OUT_SUBSET" \
+    --hog-ids-file "$OUT_DIR/hog_ids_list.txt"
+orthoxml-tools stats --infile "$OUT_SUBSET"
+
+echo -e "\n[10] Test: OrthoXML to NHX conversion"
 orthoxml-tools to-nhx \
     --infile "$MULTIPLE_RHOGS_INFILE" \
     --outdir "tests_output/trees" \
     --xref-tag geneId
 
-echo -e "\n[10] Test: Newick (NHX) to OrthoXML conversion"
+echo -e "\n[11] Test: Newick (NHX) to OrthoXML conversion"
 orthoxml-tools from-nhx --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx.orthoxml"
 orthoxml-tools from-nhx --infile "$EXAMPLES_DIR/sample2.nhx" "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx21.orthoxml"
 orthoxml-tools from-nhx --species-encode "nhx" --infile "$EXAMPLES_DIR/sample.nhx" --outfile "tests_output/from_nhx_nhxspecies.orthoxml"
 
 
-echo -e "\n[11] Test: Orthofinder CSV to OrthoXML conversion"
+echo -e "\n[12] Test: Orthofinder CSV to OrthoXML conversion"
 orthoxml-tools from-csv --infile examples/data/InputOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
 
-echo -e "\n[12] Test: help commands"
+echo -e "\n[13] Test: help commands"
 orthoxml-tools -h
 orthoxml-tools stats -h
 
-echo -e "\n[13] Test: version"
+echo -e "\n[14] Test: version"
 orthoxml-tools --version
 orthoxml-tools -v
 
-echo -e "\n[14] Test: validation"
+echo -e "\n[15] Test: validation"
 orthoxml-tools validate --infile "$VALIDATE_INFILE"
 
 echo -e "\n"

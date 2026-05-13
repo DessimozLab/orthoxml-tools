@@ -193,6 +193,200 @@ def _strategy_to_filterclass(strategy: str) -> StreamOrthoXMLParser:
     raise ValueError(f"Unsupported strategy {strategy}. Choices are: {valid_choices}")
 
 
+def _prune_hog_by_genes(elem, kept_gene_ids, ns):
+    """
+    Remove geneRefs whose id is not in kept_gene_ids, then prune groups
+    that become empty or invalid (paralogGroup with <2 children) bottom-up.
+    Returns the (modified) elem, or None if no content remains.
+    """
+    group_tags = {f"{{{ns}}}orthologGroup", f"{{{ns}}}paralogGroup"}
+    content_tags = group_tags | {f"{{{ns}}}geneRef"}
+
+    for generef in list(elem.iterfind(f".//{{{ns}}}geneRef")):
+        if generef.get("id") not in kept_gene_ids:
+            generef.getparent().remove(generef)
+
+    def has_content(node):
+        return any(c.tag in content_tags for c in node)
+
+    def prune(node):
+        for child in list(node):
+            if child.tag in group_tags:
+                prune(child)
+        for child in list(node):
+            if child.tag not in group_tags:
+                continue
+            children = [c for c in child if c.tag in content_tags]
+            local_tag = child.tag.split('}', 1)[-1]
+            if not children:
+                node.remove(child)
+            elif local_tag == 'paralogGroup' and len(children) < 2:
+                node.remove(child)
+                if children:
+                    node.append(children[0])
+
+    prune(elem)
+    return elem if has_content(elem) else None
+
+
+class SpeciesFilter(StreamOrthoXMLParser):
+    """
+    Single-pass streaming filter: keeps only the listed species.
+    geneRefs pointing to removed species are pruned from HOGs,
+    and groups that become empty (or paralogGroups with <2 children) are removed.
+    """
+    def __init__(self, source, species_names):
+        super().__init__(source)
+        self.species_names = set(species_names)
+        self._kept_gene_ids = set()
+
+    def process_species(self, elem):
+        name = elem.get("name")
+        if name not in self.species_names:
+            return None
+        for gene in elem.iterfind(f".//{{{self._ns}}}gene"):
+            self._kept_gene_ids.add(gene.get("id"))
+        return elem
+
+    def process_toplevel_group(self, elem):
+        return _prune_hog_by_genes(elem, self._kept_gene_ids, self._ns)
+
+
+class IndexHOGsByIds(StreamOrthoXMLParser):
+    """
+    First pass for HOG-ID subsetting.
+    Finds every gene ID referenced by the requested HOG IDs.
+    If a parent and a child HOG ID are both requested, only the parent is kept.
+    """
+    def __init__(self, source, hog_ids):
+        super().__init__(source)
+        self.hog_ids = set(hog_ids)
+        self.present_genes: set = set()
+        self.matched_hog_ids: set = set()
+
+    def process_toplevel_group(self, elem):
+        ns = {"ox": self._ns}
+        matches = []
+
+        if elem.get("id") in self.hog_ids:
+            matches.append(elem)
+        for hog_id in self.hog_ids:
+            found = elem.find(f'.//ox:orthologGroup[@id="{hog_id}"]', ns)
+            if found is not None and found not in matches:
+                matches.append(found)
+
+        if not matches:
+            return None
+
+        # keep only non-descendants: if A is ancestor of B, drop B
+        kept = []
+        for m in matches:
+            ancestors = set(m.iterancestors())
+            if not any(other in ancestors for other in matches if other is not m):
+                kept.append(m)
+
+        for m in kept:
+            hog_id = m.get("id")
+            if hog_id:
+                self.matched_hog_ids.add(hog_id)
+            for generef in m.iterfind(".//ox:geneRef", ns):
+                self.present_genes.add(generef.get("id"))
+
+        return None
+
+
+class OutputHOGsById(StreamOrthoXMLParser):
+    """
+    Second pass for HOG-ID subsetting.
+    Emits matched sub-HOGs as new root HOGs, retaining only their genes.
+    When species_names is given, also filters to those species.
+    """
+    def __init__(self, source, matched_hog_ids, present_genes, species_names=None):
+        super().__init__(source)
+        self.matched_hog_ids = set(matched_hog_ids)
+        self.present_gene_ids = set(present_genes)
+        self.species_names = set(species_names) if species_names is not None else None
+        self._emitted_gene_ids: set = set()
+
+    def process_species(self, elem):
+        name = elem.get("name")
+        if self.species_names is not None and name not in self.species_names:
+            return None
+        for gene in list(elem.iterfind(f".//{{{self._ns}}}gene")):
+            gid = gene.get("id")
+            if gid not in self.present_gene_ids:
+                gene.getparent().remove(gene)
+            else:
+                self._emitted_gene_ids.add(gid)
+        genes_left = elem.findall(f".//{{{self._ns}}}gene")
+        return elem if genes_left else None
+
+    def process_toplevel_group(self, elem):
+        ns = {"ox": self._ns}
+        results = []
+
+        if elem.get("id") in self.matched_hog_ids:
+            results.append(elem)
+        else:
+            for hog_id in self.matched_hog_ids:
+                found = elem.find(f'.//ox:orthologGroup[@id="{hog_id}"]', ns)
+                if found is not None:
+                    results.append(found)
+
+        if not results:
+            return None
+
+        if self.species_names is not None:
+            results = [
+                r for r in (
+                    _prune_hog_by_genes(sub, self._emitted_gene_ids, self._ns)
+                    for sub in results
+                )
+                if r is not None
+            ]
+
+        return results if results else None
+
+
+def subset_orthoxml(source_orthoxml, out, species_names=None, hog_ids=None):
+    """
+    Produce a subset OrthoXML containing only the specified species and/or HOGs.
+
+    :param source_orthoxml: path to input OrthoXML file
+    :param out: path to write the subset OrthoXML
+    :param species_names: iterable of species names to keep (None = keep all)
+    :param hog_ids: iterable of HOG IDs to extract as new root HOGs (None = keep all)
+
+    HOG IDs may refer to any nesting level. When a parent and a child HOG ID
+    are both listed, only the parent is extracted. When both filters are given
+    they are applied together (species filter applied inside each extracted HOG).
+    """
+    if species_names is None and hog_ids is None:
+        raise ValueError("Provide at least one of species_names or hog_ids")
+
+    if hog_ids is not None:
+        with IndexHOGsByIds(source_orthoxml, hog_ids) as indexer:
+            indexer.parse_through()
+
+        process_stream_orthoxml(
+            source_orthoxml,
+            out,
+            parser_cls=OutputHOGsById,
+            parser_kwargs={
+                "matched_hog_ids": indexer.matched_hog_ids,
+                "present_genes": indexer.present_genes,
+                "species_names": list(species_names) if species_names is not None else None,
+            },
+        )
+    else:
+        process_stream_orthoxml(
+            source_orthoxml,
+            out,
+            parser_cls=SpeciesFilter,
+            parser_kwargs={"species_names": list(species_names)},
+        )
+
+
 def filter_kwargs(cls, kwargs):
     """Selects kwargs that the class expects from the given kwargs array"""
     sig = inspect.signature(cls.__init__)

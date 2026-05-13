@@ -175,6 +175,68 @@ orthoxml-tools export-ogs --infile path/to/file.orthoxml --outfile path/to/outpu
 orthoxml-tools export-ogs --infile examples/data/sample-for-og.orthoxml --outfile tests_output/ogs.tsv --id protId
 ```
 
+### 🛠️ **subset**
+Extract a subset of an OrthoXML file by species and/or HOG IDs.
+
+```bash
+orthoxml-tools subset --infile path/to/file.orthoxml --outfile path/to/output.orthoxml \
+    [--species SPECIES [SPECIES ...]] \
+    [--species-file FILE] \
+    [--hog-ids HOG_ID [HOG_ID ...]] \
+    [--hog-ids-file FILE]
+```
+
+**Options:**
+- `--infile <file>`: Input OrthoXML file (required).
+- `--outfile <file>`: Output OrthoXML file (required).
+- `--species <name> [<name> ...]`: One or more species names to keep.
+- `--species-file <file>`: Plain-text file with one species name per line.
+- `--hog-ids <id> [<id> ...]`: One or more HOG IDs to extract as new root HOGs.
+- `--hog-ids-file <file>`: Plain-text file with one HOG ID per line.
+
+At least one of `--species`/`--species-file` or `--hog-ids`/`--hog-ids-file` is required. Both can be combined.
+
+**Notes:**
+- HOG IDs can refer to any nesting level — the matched sub-tree is promoted to a root HOG in the output.
+- If a parent and a child HOG ID are both listed, only the parent is extracted (it already contains the child).
+- After filtering, species with no remaining genes and groups that become empty are automatically removed.
+
+**Examples:**
+
+```bash
+# Keep only two species
+orthoxml-tools subset \
+    --infile examples/data/sample-for-subset.orthoxml \
+    --outfile output/mammals.orthoxml \
+    --species "Homo sapiens" "Mus musculus"
+
+# Extract a specific HOG (any nesting level) as a standalone file
+orthoxml-tools subset \
+    --infile examples/data/sample-for-subset.orthoxml \
+    --outfile output/opistokonta.orthoxml \
+    --hog-ids HOG_Opistokonta
+
+# Extract two independent HOGs at once
+orthoxml-tools subset \
+    --infile examples/data/sample-for-subset.orthoxml \
+    --outfile output/sauria_and_plants.orthoxml \
+    --hog-ids HOG_Sauria HOG_Viridiplantae
+
+# Extract a HOG and further restrict to specific species
+orthoxml-tools subset \
+    --infile examples/data/sample-for-subset.orthoxml \
+    --outfile output/opistokonta_mammals.orthoxml \
+    --hog-ids HOG_Opistokonta \
+    --species "Homo sapiens" "Mus musculus"
+
+# Use files for large lists
+orthoxml-tools subset \
+    --infile big.orthoxml \
+    --outfile output/subset.orthoxml \
+    --species-file my_species.txt \
+    --hog-ids-file my_hogs.txt
+```
+
 ### 🛠️ **split**
 Split the tree into multiple trees based on rootHOGs.
 
