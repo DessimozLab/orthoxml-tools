@@ -318,6 +318,22 @@ orthoxml-tools from-csv --infile path/to/file.csv --outfile path/to/file.orthoxm
 orthoxml-tools from-csv --infile examples/data/InputOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
 ```
 
+### 🛠️ OrthoXML to CSV/TSV
+Export an OrthoXML file to the OrthoFinder-style tab-separated table format. The output has one row per top-level ortholog group and one column per species. Each cell contains the gene labels for that species in that group, joined by commas.
+
+```bash
+orthoxml-tools to-csv --infile path/to/file.orthoxml --outfile path/to/file.tsv
+```
+
+**Options:**
+- `--infile <file>`: Specify the input OrthoXML file (required).
+- `--outfile <file>`: Specify the output TSV/CSV file (required).
+- `--id <attribute>`: Choose which gene attribute to use as the exported label (default: `geneId`; common alternatives: `protId`, `id`).
+
+**Example:**
+```bash
+orthoxml-tools to-csv --infile tests_output/orthofinder.orthoxml --outfile tests_output/output.tsv --id geneId
+```
 
 ### 🛠️ **filter**
 Filter the OrthoXML tree by a completeness score. 
