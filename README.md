@@ -65,8 +65,8 @@ orthoxml-tools stats --infile path/to/file.orthoxml
 # Gene counts per taxon
 orthoxml-tools gene-stats --infile path/to/file.orthoxml --outfile gene_stats.json
 
-# Human-readable taxonomy view
-orthoxml-tools taxonomy --infile path/to/file.orthoxml
+# Export orthologous pairs
+orthoxml-tools export-pairs ortho --infile path/to/file.orthoxml --outfile orthos.tsv
 ```
 
 ### Export data for downstream analysis
@@ -137,6 +137,11 @@ orthoxml-tools from-nhx \
 orthoxml-tools from-csv \
   --infile examples/data/InputOrthogroups.csv \
   --outfile ./tests_output/orthofinder.orthoxml
+
+# Convert OrthoXML back to OrthoFinder-style CSV
+orthoxml-tools to-csv \
+  --infile  ./tests_output/orthofinder.orthoxml \
+  --outfile examples/data/InputOrthogroups.csv
 ```
 
 ## Command reference
