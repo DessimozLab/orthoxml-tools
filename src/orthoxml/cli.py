@@ -9,7 +9,7 @@ from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
 from orthoxml.converters.to_nhx import orthoxml_to_newick
 from orthoxml.converters.from_nhx import (orthoxml_from_newicktrees, nhx_species_encoded_leaf)
-from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml
+from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml, convert_orthoxml_to_csv
 from orthoxml.custom_parsers import (
     BasicStats,
     GenePerTaxonStats,
@@ -191,6 +191,16 @@ def handle_conversion_from_orthofinder(args):
         root_attrib={"version":"0.4","origin":"orthoXML.org","originVersion":"1"}
     )
 
+
+def handle_conversion_to_orthofinder_csv(args):
+    convert_orthoxml_to_csv(
+        xml_path=args.infile,
+        csv_path=args.outfile,
+        id_attr=args.id,
+        delimiter="\t",
+    )
+
+
 def handle_filter(args):
     filter_hogs(args.infile, args.outfile, args.threshold,
                 strategy=args.strategy)
@@ -319,6 +329,19 @@ def main():
     converter_from_ortho_parser.add_argument("--infile", required=True, help="Paths to OrthoGroup CSV file")
     converter_from_ortho_parser.add_argument("--outfile", required=True, help="Path to the output OrthoXML file")
     converter_from_ortho_parser.set_defaults(func=handle_conversion_from_orthofinder)
+
+    ## OrthoXML to OrthoGroup TSV/CSV
+    converter_to_ortho_parser = subparsers.add_parser("to-csv",
+                                                       parents=[shared_args_parser],
+                                                       help="Convert an OrthoXML file to the OrthoFinder-style TSV/CSV format")
+    converter_to_ortho_parser.add_argument("--infile", required=True, help="Path to the input OrthoXML file")
+    converter_to_ortho_parser.add_argument("--outfile", required=True, help="Path to the output TSV/CSV file")
+    converter_to_ortho_parser.add_argument(
+        "--id",
+        default="geneId",
+        help="The gene attribute used as output label (default: geneId; alternatives: protId, id)",
+    )
+    converter_to_ortho_parser.set_defaults(func=handle_conversion_to_orthofinder_csv)
 
     # Export pairs subcommand
     export_parser = subparsers.add_parser("export-pairs",

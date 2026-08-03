@@ -1,5 +1,6 @@
 from pathlib import Path
 from io import BytesIO
+import csv
 import xml.etree.ElementTree as ET
 import pytest
 import types
@@ -15,6 +16,7 @@ from orthoxml.converters.from_nhx import (
     OrthoXMLBuilder,
     GeneRefHelper
 )
+from orthoxml.converters.from_orthofinder import convert_csv_to_orthoxml, convert_orthoxml_to_csv
 
 
 
@@ -200,6 +202,80 @@ def test_gene_ref_and_species_node():
 
 def make_simple_tree():
     return dendropy.Tree.get(data="(geneA_HUMAN,geneB_MOUSE);", schema="newick", preserve_underscores=True)
+
+
+def test_convert_csv_to_orthoxml(tmp_path):
+    csv_path = tmp_path / "sample.tsv"
+    xml_path = tmp_path / "sample.orthoxml"
+
+    csv_path.write_text(
+        "Orthogroup\tSpeciesA\tSpeciesB\n"
+        "OG1\tgeneA1, geneA2\tgeneB1\n"
+        "OG2\t\tgeneB2\n",
+        encoding="utf-8",
+    )
+
+    convert_csv_to_orthoxml(
+        str(csv_path),
+        str(xml_path),
+        xmlns="http://orthoXML.org/2011/",
+        root_attrib={"version": "0.4", "origin": "unit_test"},
+    )
+
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+    ns = {"ox": "http://orthoXML.org/2011/"}
+    species = root.findall("ox:species", ns)
+    assert len(species) == 2
+    assert [sp.attrib["name"] for sp in species] == ["SpeciesA", "SpeciesB"]
+
+    groups = root.findall("ox:groups/ox:orthologGroup", ns)
+    assert len(groups) == 2
+    assert groups[0].attrib["id"] == "OG1"
+    assert len(groups[0].findall("ox:geneRef", ns)) == 3
+    assert len(groups[1].findall("ox:geneRef", ns)) == 1
+
+
+def test_convert_orthoxml_to_csv(tmp_path):
+    xml_path = tmp_path / "sample.orthoxml"
+    csv_path = tmp_path / "sample.tsv"
+
+    xml_path.write_text(
+        """<?xml version='1.0'?>
+<orthoXML version='0.4' xmlns='http://orthoXML.org/2011/'>
+  <species name='speciesA' NCBITaxId='1'>
+    <database name='db' version='1'>
+      <genes>
+        <gene id='1' geneId='geneA'/>
+        <gene id='2' geneId='geneB'/>
+      </genes>
+    </database>
+  </species>
+  <species name='speciesB' NCBITaxId='2'>
+    <database name='db' version='1'>
+      <genes>
+        <gene id='3' geneId='geneC'/>
+      </genes>
+    </database>
+  </species>
+  <groups>
+    <orthologGroup id='OG1'>
+      <geneRef id='1'/>
+      <geneRef id='3'/>
+    </orthologGroup>
+  </groups>
+</orthoXML>
+""",
+        encoding="utf-8",
+    )
+
+    convert_orthoxml_to_csv(str(xml_path), str(csv_path), id_attr="geneId")
+
+    with csv_path.open(newline="", encoding="utf-8") as fh:
+        rows = list(csv.reader(fh, delimiter="\t"))
+
+    assert rows[0] == ["Orthogroup", "speciesA", "speciesB"]
+    assert rows[1] == ["OG1", "geneA", "geneC"]
 
 
 def test_orthoxml_builder_writes_valid_xml():

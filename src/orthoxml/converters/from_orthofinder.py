@@ -2,6 +2,72 @@ import csv
 from lxml import etree
 from ..parsers import OrthoXMLStreamWriter
 
+
+def convert_orthoxml_to_csv(
+    xml_path: str,
+    csv_path: str,
+    id_attr: str = "geneId",
+    delimiter: str = "\t",
+):
+    """Export a simplified OrthoXML file to the OrthoFinder-style TSV/CSV format.
+
+    The output is a tab-delimited table with one row per top-level ortholog group.
+    The first column is the group id, followed by one column per species. Each cell
+    contains a comma-separated list of gene identifiers for that species in that group.
+    """
+
+    tree = etree.parse(xml_path)
+    root = tree.getroot()
+    ns = root.nsmap.get(None, "")
+    ns_tag = f"{{{ns}}}" if ns else ""
+
+    species_nodes = root.findall(f"{ns_tag}species")
+    species_names = []
+    gene_id_to_label = {}
+    gene_id_to_species = {}
+
+    for species in species_nodes:
+        species_name = species.get("name")
+        species_names.append(species_name)
+
+        for gene in species.findall(f".//{ns_tag}gene"):
+            gene_internal_id = gene.get("id")
+            gene_label = gene.get(id_attr) or gene.get("id")
+            if not gene_internal_id:
+                continue
+            gene_id_to_label[gene_internal_id] = gene_label
+            gene_id_to_species[gene_internal_id] = species_name
+
+    group_rows = []
+    groups_node = root.find(f"{ns_tag}groups")
+    if groups_node is not None:
+        for group in groups_node.findall(f"{ns_tag}orthologGroup"):
+            genes_by_species = {name: [] for name in species_names}
+            for gene_ref in group.findall(f".//{ns_tag}geneRef"):
+                gene_internal_id = gene_ref.get("id")
+                if not gene_internal_id:
+                    continue
+                species_name = gene_id_to_species.get(gene_internal_id)
+                if species_name is None:
+                    continue
+                genes_by_species[species_name].append(gene_id_to_label.get(gene_internal_id, gene_internal_id))
+
+            group_rows.append([
+                group.get("id") or "",
+                *[
+                    ", ".join(genes_by_species[species_name])
+                    for species_name in species_names
+                ],
+            ])
+
+    with open(csv_path, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.writer(fh, delimiter=delimiter, lineterminator="\n")
+        writer.writerow(["Orthogroup", *species_names])
+        writer.writerows(group_rows)
+
+    print(f"Wrote CSV/TSV to {csv_path}")
+
+
 def convert_csv_to_orthoxml(
     csv_path: str,
     xml_path: str,
