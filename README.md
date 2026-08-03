@@ -2,355 +2,285 @@
 
 Tools for working with OrthoXML files.
 
-## What is OrthoXML Format?
+## Table of contents
 
-> OrthoXML is a standard for sharing and exchanging orthology predictions. OrthoXML is designed broadly to allow the storage and comparison of orthology data from any ortholog database. It establishes a structure for describing orthology relationships while still allowing flexibility for database-specific information to be encapsulated in the same format.  
-> [OrthoXML](https://github.com/qfo/orthoxml/tree/main)
+- [What is OrthoXML?](#what-is-orthoxml)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Common workflows](#common-workflows)
+  - [Inspect an OrthoXML file](#inspect-an-orthoxml-file)
+  - [Export data for downstream analysis](#export-data-for-downstream-analysis)
+  - [Transform or subset data](#transform-or-subset-data)
+  - [Convert between formats](#convert-between-formats)
+- [Command reference](#command-reference)
+- [Getting help](#getting-help)
+- [Legacy API](#legacy-api)
+- [Development and testing](#development-and-testing)
 
-# Installation
+## What is OrthoXML?
 
-```
+> OrthoXML is a standard for sharing and exchanging orthology predictions. It provides a structured way to describe orthology relationships while preserving database-specific annotations. More details are available at [OrthoXML](https://github.com/qfo/orthoxml/tree/main).
+
+## Installation
+
+Install the package from PyPI:
+
+```bash
 pip install orthoxml-tools
 ```
 
-# Usage
+Input OrthoXML files can be plain text or compressed with gzip (.gz) or bzip2 (.bz2).
+
+## Quick start
+
+The CLI follows this pattern:
 
 ```bash
 orthoxml-tools [options] <subcommand> [options]
 ```
 
-> Note: Input OrthoXML files can be in plain text or compressed format. Both gzip (.gz) and bzip2 (.bz2) compression are supported.
+A few common first steps:
 
-## Subcommands
+```bash
+# Validate a file against the schema declared inside it
+orthoxml-tools validate --infile examples/data/ex1.orthoxml
 
-### 🛠️ **validate**
-Validate an OrthoXML file against the schema version specified in the file itself.
+# Summarize the tree structure
+orthoxml-tools stats --infile examples/data/ex3-int-taxon.orthoxml
+
+# Print a human-readable taxonomy tree
+orthoxml-tools taxonomy --infile examples/data/ex3-int-taxon.orthoxml
+```
+
+## Common workflows
+
+### Inspect an OrthoXML file
+
+Use these commands to understand the content of an OrthoXML file before processing it further.
+
+```bash
+# Basic statistics
+orthoxml-tools stats --infile path/to/file.orthoxml
+
+# Gene counts per taxon
+orthoxml-tools gene-stats --infile path/to/file.orthoxml --outfile gene_stats.json
+
+# Human-readable taxonomy view
+orthoxml-tools taxonomy --infile path/to/file.orthoxml
+```
+
+### Export data for downstream analysis
+
+Export pairwise relationships or ortholog groups into tabular formats that are easy to analyze with other tools.
+
+```bash
+# Export orthologous pairs
+orthoxml-tools export-pairs ortho \
+  --infile examples/data/ex1-int-taxon.orthoxml \
+  --outfile orthos.tsv
+
+# Export paralogous pairs
+orthoxml-tools export-pairs para \
+  --infile examples/data/ex1-int-taxon.orthoxml \
+  --outfile paras.tsv
+
+# Export ortholog groups as a simple two-column table
+orthoxml-tools export-ogs \
+  --infile examples/data/sample-for-og.orthoxml \
+  --outfile ogs.tsv \
+  --id protId
+```
+
+### Transform or subset data
+
+Use these commands to focus on a subset of the tree or to remove incomplete groups.
+
+```bash
+# Keep only selected species
+orthoxml-tools subset \
+  --infile examples/data/sample-for-subset.orthoxml \
+  --outfile mammals.orthoxml \
+  --species "Homo sapiens" "Mus musculus"
+
+# Extract one or more HOGs as standalone root groups
+orthoxml-tools subset \
+  --infile examples/data/sample-for-subset.orthoxml \
+  --outfile opistokonta.orthoxml \
+  --hog-ids HOG_Opistokonta
+
+# Filter by completeness score
+orthoxml-tools filter \
+  --infile examples/data/sample-for-filter.orthoxml \
+  --threshold 0.24 \
+  --strategy cascade-remove \
+  --outfile filtered.orthoxml
+```
+
+### Convert between formats
+
+The package also supports conversions to and from common phylogenetic and orthology formats.
+
+```bash
+# Convert OrthoXML to NHX trees
+orthoxml-tools to-nhx \
+  --infile examples/data/sample-for-nhx.orthoxml \
+  --outdir ./tests_output/trees \
+  --xref-tag protId \
+  --encode-levels
+
+# Convert NHX back to OrthoXML
+orthoxml-tools from-nhx \
+  --infile examples/data/sample.nhx \
+  --outfile ./tests_output/from_nhx.orthoxml
+
+# Convert OrthoFinder-style CSV to OrthoXML
+orthoxml-tools from-csv \
+  --infile examples/data/InputOrthogroups.csv \
+  --outfile ./tests_output/orthofinder.orthoxml
+```
+
+## Command reference
+
+### validate
+Validate an OrthoXML file against the schema version declared in the file.
 
 ```bash
 orthoxml-tools validate --infile path/to/file.orthoxml
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input file (required).
+Options:
+- `--infile <file>`: Input OrthoXML file (required).
 
-**Example:**
-```bash
-orthoxml-tools validate --infile examples/data/ex1.orthoxml
-```
-
-### 🛠️ **stats**
-Display basic statistics.
+### stats
+Display basic tree statistics.
 
 ```bash
-orthoxml-tools stats --infile path/to/file.orthoxml [--outfile <file>] 
+orthoxml-tools stats --infile path/to/file.orthoxml
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input file (required).
-
-**Example:**
-```bash
-orthoxml-tools stats --infile examples/data/ex3-int-taxon.orthoxml
-```
-
-### 🛠️ **gene-stats**
-Display statistics for gene count per taxon.
+### gene-stats
+Display gene counts per taxon.
 
 ```bash
 orthoxml-tools gene-stats --infile path/to/file.orthoxml [--outfile <file>]
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input file (required).
-- `--outfile <file>`: Write stats to a txt file.
+Options:
+- `--infile <file>`: Input OrthoXML file (required).
+- `--outfile <file>`: Write counts to a JSON file when provided.
 
-**Example:**
-```bash
-orthoxml-tools gene-stats --infile examples/data/ex3-int-taxon.orthoxml --outfile gene_stats.txt
-```
-
-### 🛠️ **filter**
-Filter orthology groups based on CompletenessScore score and a threshold and strategy.
-
-```bash
-orthoxml-tools filter --infile path/to/file.orthoxml --threshold <value> --strategy <cascade-remove|extract|reparent> --outfile <file>
-```
-
-**Options:**
-- `--infile <file>`: Specify the input file. (required)
-- `--threshold <value>`: Set the threshold for filtering. value below this will be removed. (required)
-- `--strategy <cascade-remove|extract|reparent>`: Choose the filtering strategy (default is `cascade-remove`).
-- `--outfile <file>`: Save output to a file. if not specified, the output will be printed to stdout. (required)
-
-
-**Examples:**
-```bash
- orthoxml-tools filter --infile examples/data/sample-for-filter.orthoxml --score-name CompletenessScore --strategy top-down --threshold 0.24 --outfile tests_output/filtered_stream.orthoxml
-```
-
-### 🛠️ **taxonomy**
-Print a human-readable taxonomy tree from the OrthoXML file.
+### taxonomy
+Print a taxonomy tree for the provided OrthoXML file.
 
 ```bash
 orthoxml-tools taxonomy --infile path/to/file.orthoxml
 ```
 
-**Example:**
-```bash
->>> orthoxml-tools taxonomy --infile examples/data/ex3-int-taxon.orthoxml
-Root
-├── Mus musculus
-└── Primates
-    ├── Homo sapiens
-    └── Pan troglodytes
-```
-
-### 🛠️ **export-pairs**
-Export pairs (orthologs or paralogs) in TSV form, with configurable chunking and buffering.
+### export-pairs
+Export ortholog or paralog pairs as tab-separated output.
 
 ```bash
 orthoxml-tools export-pairs <ortho|para> \
-    --infile <file> \
-    --outfile <file> \
-    [--id <tag>] \
-    [--chunk-size <number>] \
-    [--buffer-size <bytes>]
+  --infile <file> \
+  --outfile <file> \
+  [--id <tag>] \
+  [--chunk-size <number>] \
+  [--buffer-size <bytes>]
 ```
 
-**Positional arguments:**
-<ortho|para>
-Choose which pair type to export:
-- `ortho`: orthologous pairs
-- `para`: paralogous pairs
-
-**Options:**
+Options:
 - `--infile <file>`: Input OrthoXML file (required).
-- `--outfile <file>`: Write output CSV to this file (required).
-- `--id <tag>`: Gene attribute to use as identifier (default: id). other values: protId, geneId
-- `--chunk-size <number>`: Number of pairs to process per chunk (default: 20_000).
-- `--buffer-size <bytes>`: I/O buffer size in bytes (default: 4194304).
+- `--outfile <file>`: Output file (required).
+- `--id <tag>`: Identifier to use in the output (`id`, `geneId`, or `protId`).
+- `--chunk-size <number>`: Number of pairs to buffer per write (default: 20,000).
+- `--buffer-size <bytes>`: I/O buffer size in bytes (default: 4 MiB).
 
-**Examples:**
-
-```bash
-# [5.1] Export ortholog pairs with default chunk & buffer sizes
-orthoxml-tools export-pairs ortho \
-    --infile examples/data/ex1-int-taxon.orthoxml \
-    --outfile orthos.csv
-
-# [5.2] Export paralog pairs with default chunk & buffer sizes
-orthoxml-tools export-pairs para \
-    --infile examples/data/ex1-int-taxon.orthoxml \
-    --outfile paras.csv
-
-# [5.3] Export ortholog pairs using `geneId` as the identifier column
-orthoxml-tools export-pairs ortho \
-    --infile examples/data/ex1-int-taxon.orthoxml \
-    --outfile orthos_geneid.csv \
-    --id geneId
-
-# [5.4] Export ortholog pairs with custom chunk and buffer sizes
-orthoxml-tools export-pairs ortho \
-    --infile examples/data/ex1-int-taxon.orthoxml \
-    --outfile orthos_custom.csv \
-    --chunk-size 5000 \
-    --buffer-size 1048576
-```
-
-
-### 🛠️ **export-ogs**
-Export Orthologous Groups as TSV file.
+### export-ogs
+Export orthologous groups as a simple TSV file.
 
 ```bash
 orthoxml-tools export-ogs --infile path/to/file.orthoxml --outfile path/to/output.tsv [--id <tag>]
 ```
 
-**Options:**
-- `--infile <file>`: Input OrthoXML file (required).
-- `--outfile <file>`: Write output CSV to this file (required).
-- `--id <tag>`: Gene attribute to use as identifier (default: id).
-
-**Examples:**
-```bash
-orthoxml-tools export-ogs --infile examples/data/sample-for-og.orthoxml --outfile tests_output/ogs.tsv --id protId
-```
-
-### 🛠️ **subset**
+### subset
 Extract a subset of an OrthoXML file by species and/or HOG IDs.
 
 ```bash
 orthoxml-tools subset --infile path/to/file.orthoxml --outfile path/to/output.orthoxml \
-    [--species SPECIES [SPECIES ...]] \
-    [--species-file FILE] \
-    [--hog-ids HOG_ID [HOG_ID ...]] \
-    [--hog-ids-file FILE]
+  [--species SPECIES [SPECIES ...]] \
+  [--species-file FILE] \
+  [--hog-ids HOG_ID [HOG_ID ...]] \
+  [--hog-ids-file FILE]
 ```
 
-**Options:**
+Options:
 - `--infile <file>`: Input OrthoXML file (required).
 - `--outfile <file>`: Output OrthoXML file (required).
 - `--species <name> [<name> ...]`: One or more species names to keep.
 - `--species-file <file>`: Plain-text file with one species name per line.
-- `--hog-ids <id> [<id> ...]`: One or more HOG IDs to extract as new root HOGs.
+- `--hog-ids <id> [<id> ...]`: One or more HOG IDs to extract as new root groups.
 - `--hog-ids-file <file>`: Plain-text file with one HOG ID per line.
 
-At least one of `--species`/`--species-file` or `--hog-ids`/`--hog-ids-file` is required. Both can be combined.
+Notes:
+- HOG IDs can refer to any nesting level; the matched subtree is promoted to a root HOG in the output.
+- If both a parent and child HOG ID are supplied, only the parent is extracted.
 
-**Notes:**
-- HOG IDs can refer to any nesting level — the matched sub-tree is promoted to a root HOG in the output.
-- If a parent and a child HOG ID are both listed, only the parent is extracted (it already contains the child).
-- After filtering, species with no remaining genes and groups that become empty are automatically removed.
-
-**Examples:**
-
-```bash
-# Keep only two species
-orthoxml-tools subset \
-    --infile examples/data/sample-for-subset.orthoxml \
-    --outfile output/mammals.orthoxml \
-    --species "Homo sapiens" "Mus musculus"
-
-# Extract a specific HOG (any nesting level) as a standalone file
-orthoxml-tools subset \
-    --infile examples/data/sample-for-subset.orthoxml \
-    --outfile output/opistokonta.orthoxml \
-    --hog-ids HOG_Opistokonta
-
-# Extract two independent HOGs at once
-orthoxml-tools subset \
-    --infile examples/data/sample-for-subset.orthoxml \
-    --outfile output/sauria_and_plants.orthoxml \
-    --hog-ids HOG_Sauria HOG_Viridiplantae
-
-# Extract a HOG and further restrict to specific species
-orthoxml-tools subset \
-    --infile examples/data/sample-for-subset.orthoxml \
-    --outfile output/opistokonta_mammals.orthoxml \
-    --hog-ids HOG_Opistokonta \
-    --species "Homo sapiens" "Mus musculus"
-
-# Use files for large lists
-orthoxml-tools subset \
-    --infile big.orthoxml \
-    --outfile output/subset.orthoxml \
-    --species-file my_species.txt \
-    --hog-ids-file my_hogs.txt
-```
-
-### 🛠️ **split**
-Split the tree into multiple trees based on rootHOGs.
+### split
+Split the tree into multiple trees based on root HOGs.
 
 ```bash
 orthoxml-tools split --infile path/to/file.orthoxml --outdir path/to/output_folder
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input OrthoXML file (required).
-- `--outdir <folder>`: Specify the output folder where the trees will be saved.
-- 
-**Examples:**
-```bash
-orthoxml-tools split --infile examples/data/ex4-int-taxon-multiple-rhogs.orthoxml --outdir tests_output/splits
-```
-
-## File Conversions
-
-### 🛠️ **OrthoXML to Newick Tree (NHX)**
-Convert OrthoXML to Newick (NHX) format.
+### filter
+Filter the tree by completeness score using a chosen strategy.
 
 ```bash
-orthoxml-tools to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --xref-tag [geneId,protId,...]    
+orthoxml-tools filter \
+  --infile path/to/file.orthoxml \
+  --threshold <value> \
+  --strategy <cascade-remove|extract|reparent> \
+  --outfile path/to/output.orthoxml
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input OrthoXML file (required).
-- `--outdir <folder>`: Specify the output folder where the NHX files will be saved (required).
-- `--xref-tag <tag>`: Specify the attribute of the `<gene>` element to use as the label for the leaves. Default is `protId`.
-- `--encode-levels`: If set, encode group levels as NHX comments in the output tree. This is useful for visualizing the hierarchy of orthologous groups.
-  
-**Example:**
+### to-nhx
+Convert OrthoXML to Newick/NHX format.
+
 ```bash
-orthoxml-tools to-nhx --infile examples/data/sample-for-nhx.orthoxml --outdir ./tests_output/trees --xref-tag protId --encode-levels
+orthoxml-tools to-nhx --infile path/to/file.orthoxml --outdir path/to/output_folder --xref-tag protId
 ```
 
-### 🛠️ **Newick Tree (NHX) to OrthoXML**
-Convert Newick (NHX) format to OrthoXML.
+Options:
+- `--infile <file>`: Input OrthoXML file (required).
+- `--outdir <folder>`: Output folder for generated files (required).
+- `--xref-tag <tag>`: Gene attribute to use as the leaf label (default: `protId`).
+- `--encode-levels`: Include group-level information as NHX comments.
+
+### from-nhx
+Convert Newick/NHX files back to OrthoXML.
 
 ```bash
 orthoxml-tools from-nhx --infile path/to/file.nhx --outfile path/to/file.orthoxml [--species-encode nhx|underscore]
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input nhx file or files. (at least one file is required).
-  - You can specify multiple files by providing them as a space-separated list.
-  - If you provide multiple files, they will be combined into a single OrthoXML output.
-- `--outfile <folder>`: Specify the output OrthoXML file (required).
-- `--species-encode <nhx|underscore>`: How species/taxonomic levels are encoded in the Newick files. (default: `underscore`)
-    - `nhx` → Species encoded in NHX comments using S= or T= tags. For example: `(A_s1:0.1[&&NHX:S=s1],B_s2:0.2[&&NHX:S=s2]);`
-    - `underscore` → Species encoded in leaf labels using underscores (e.g., `GeneID_SpeciesID`).
-
-**Example:**
-```bash
-orthoxml-tools from-nhx --infile examples/data/sample.nhx --outfile ./tests_output/from_nhx.orthoxml
-orthoxml-tools from-nhx --infile examples/data/sample2.nhx examples/data/sample.nhx --outfile ./tests_output/from_nhx21.orthoxml 
-orthoxml-tools from-nhx \
-  --species-encode nhx \
-  --infile examples/data/sample.nhx \
-  --outfile tests_output/from_nhx_nhxspecies.orthoxml
-```
-
-### 🛠️ CSV to OrthoXML (exploratory feature)
-Convert a CSV file to OrthoXML. The CSV file is structured such that each row represents an orthogroup (OG), each column corresponds to a species, and each cell contains a gene name. This format is generated by OrthoFinder e.g. `examples/data/InputOrthogroups.csv`.
-
-> [!WARNING]
-> Note that since the CSV does not contain the full information required to represent the hierarchical structure of HOGs, the output OrthoXML file is reported at the root level. It should not be considered a full-fledged OrthoXML file.
+### from-csv
+Convert an OrthoFinder-style CSV file to OrthoXML.
 
 ```bash
 orthoxml-tools from-csv --infile path/to/file.csv --outfile path/to/file.orthoxml
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input orthogroups.csv file (required).
-- `--outfile <folder>`: Specify the output OrthoXML file (required).
+> Note: Because the CSV format does not preserve full hierarchical structure, the resulting OrthoXML is reported at the root level and should be considered an exploratory conversion.
 
-**Example:**
-```bash
-orthoxml-tools from-csv --infile examples/data/InputOrthogroups.csv --outfile tests_output/orthofinder.orthoxml
-```
-
-### 🛠️ OrthoXML to CSV/TSV
-Export an OrthoXML file to the OrthoFinder-style tab-separated table format. The output has one row per top-level ortholog group and one column per species. Each cell contains the gene labels for that species in that group, joined by commas.
+### to-csv
+Export an OrthoXML file to the OrthoFinder-style TSV format.
 
 ```bash
-orthoxml-tools to-csv --infile path/to/file.orthoxml --outfile path/to/file.tsv
+orthoxml-tools to-csv --infile path/to/file.orthoxml --outfile path/to/file.tsv [--id <attribute>]
 ```
 
-**Options:**
-- `--infile <file>`: Specify the input OrthoXML file (required).
-- `--outfile <file>`: Specify the output TSV/CSV file (required).
-- `--id <attribute>`: Choose which gene attribute to use as the exported label (default: `geneId`; common alternatives: `protId`, `id`).
+## Getting help
 
-**Example:**
-```bash
-orthoxml-tools to-csv --infile tests_output/orthofinder.orthoxml --outfile tests_output/output.tsv --id geneId
-```
-
-### 🛠️ **filter**
-Filter the OrthoXML tree by a completeness score. 
-
-- `--score-name <str>`: Name of the field for completeness score annotation (e.g. 'CompletenessScore') 
-- `--threshold <float>`: Threshold value for the completeness score
-- `--strategy <bottomup|topdown>`: Filtering strategy. Bottom-up will keep complete subHOGs even if they parents are incomplete.
-- `--outfile <file>`: If provided, write the filtered OrthoXML to this file; otherwise, print to stdout
-
-```bash
-orthoxml-tools tests/test-data/case_filtering.orthoxml filter --score-name CompletenessScore \
-                                                        --threshold 0.75 \
-                                                        --strategy bottomup \
-                                                        --outfile output-oxml.orthoxml 
-```
-
-### **Help**
 To see help for any command:
 
 ```bash
@@ -362,14 +292,14 @@ orthoxml-tools stats -h
 
 ## Legacy API
 
-The `orthoxml-tools` package used to provides a object oriented interface for working with OrthoXML files. This API is deprecated and will be removed in v1.0.0. Please use the new streaming CLI method. The documentation on it can be found [here](LEGACY-README.md).
+The older object-oriented interface is deprecated and will be removed in v1.0.0. The legacy documentation remains in [LEGACY-README.md](LEGACY-README.md).
 
-## Testing
+## Development and testing
 
-```
-uv install `.[test]`
+```bash
+uv install ".[test]"
 pytest -vv
 
-# test cli
+# CLI smoke test
 tests/test_cli.sh
 ```
