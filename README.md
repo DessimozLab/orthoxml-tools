@@ -65,6 +65,12 @@ orthoxml-tools stats --infile path/to/file.orthoxml
 # Gene counts per taxon
 orthoxml-tools gene-stats --infile path/to/file.orthoxml --outfile gene_stats.json
 
+# Show the taxonomy tree in a human-readable format
+orthoxml-tools taxonomy --infile path/to/file.orthoxml
+
+# Write the taxonomy tree to NHX format with annotated internal nodes
+orthoxml-tools taxonomy --infile path/to/file.orthoxml --outfile species-tree.nhx
+
 # Export orthologous pairs
 orthoxml-tools export-pairs ortho --infile path/to/file.orthoxml --outfile orthos.tsv
 ```
@@ -180,6 +186,10 @@ Print a taxonomy tree for the provided OrthoXML file.
 ```bash
 orthoxml-tools taxonomy --infile path/to/file.orthoxml
 ```
+
+Options:
+- `--infile <file>`: Input OrthoXML file (required).
+- `--outfile <file>`: When provided, write the taxonomy tree to this file in NHX format with internal nodes annotated.
 
 ### export-pairs
 Export ortholog or paralog pairs as tab-separated output.
