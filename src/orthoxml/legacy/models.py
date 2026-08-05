@@ -142,6 +142,24 @@ class Taxon:
             lines.append(_child_str(child, "", i == len(self.children) - 1))
         return "\n".join(lines)
 
+    def to_nhx(self) -> str:
+        """Return the taxonomy tree as a Newick tree with NHX annotations."""
+        def _normalize_label(name: str) -> str:
+            if name is None:
+                return ""
+            return name.replace(" ", "_").replace(";", "_").replace(",", "_").replace("(", "_").replace(")", "_")
+
+        def _node_to_nhx(node: "Taxon") -> str:
+            label = _normalize_label(node.name)
+            if not node.children:
+                leaf_label = label or ""
+                return f"{leaf_label}[&&NHX:S={node.name}]"
+            children_str = ",".join(_node_to_nhx(child) for child in node.children)
+            internal_label = label or ""
+            return f"({children_str}){internal_label}[&&NHX:T={node.name}]"
+
+        return _node_to_nhx(self) + ";"
+
 class Score:
     __slots__ = ("key", "value")
     def __init__(self, key: str, value: float):

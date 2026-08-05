@@ -33,6 +33,10 @@ cat "$OUT_GENE_STATS"
 echo -e "\n[4] Test: taxonomy"
 orthoxml-tools taxonomy --infile "$INFILE"
 
+echo -e "\n[4.1] Test: taxonomy with --outfile"
+orthoxml-tools taxonomy --infile "$INFILE" --outfile "$OUT_DIR/taxonomy.nhx"
+cat "$OUT_DIR/taxonomy.nhx"
+
 echo -e "\n[5.1] Test: export ortho pairs with --outfile (default chunk & buffer sizes)"
 orthoxml-tools export-pairs ortho --infile "$INFILE" --outfile "$OUT_EXPORT_PAIRS"
 cat "$OUT_EXPORT_PAIRS"
