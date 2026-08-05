@@ -72,7 +72,15 @@ def handle_taxonomy(args):
     with PrintTaxonomy(args.infile) as parser:
         for _ in parser.parse():
             pass
+        if parser.taxonomy is None:
+            raise SystemExit(f"No taxonomy tree found in {args.infile}")
+
         print(parser.taxonomy.to_str())
+        if getattr(args, "outfile", None):
+            with open(args.outfile, "w", encoding="utf-8") as outfile:
+                outfile.write(parser.taxonomy.to_nhx())
+            print(f"Taxonomy NHX tree written to {args.outfile}")
+
 
 def handle_export_pairs(args):
     if args.type == "ortho":
@@ -279,6 +287,10 @@ def main():
                                        parents=[shared_args_parser],
                                        help="Print the taxonomy tree")
     tax_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    tax_parser.add_argument(
+        "--outfile",
+        help="If provided, write the taxonomy tree as NHX to this file"
+    )
     tax_parser.set_defaults(func=handle_taxonomy)
 
     # Conversions
