@@ -318,3 +318,11 @@ pytest -vv
 # CLI smoke test
 tests/test_cli.sh
 ```
+
+## Citation
+
+If you use `orthoxml-tools` in your research, please cite:
+
+Yazdizadeh Kharrazi A, Altenhoff AM, Romashchenko N, Dessimoz C, Majidian S. "OrthoXML-Tools: A Toolkit for Manipulating OrthoXML Files for Orthology Data." *Journal of Molecular Evolution* 2025;93(6):800. https://doi.org/10.1007/s00239-025-10271-7
+
+Publication link: https://link.springer.com/article/10.1007/s00239-025-10271-7

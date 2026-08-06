@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this repository in your work, please cite it as shown below."
+title: "OrthoXML-Tools: A Toolkit for Manipulating OrthoXML Files for Orthology Data"
+authors:
+  - family-names: "Yazdizadeh Kharrazi"
+    given-names: "Ali"
+  - family-names: "Altenhoff"
+    given-names: "Adrian M."
+  - family-names: "Romashchenko"
+    given-names: "Nikolai"
+  - family-names: "Dessimoz"
+    given-names: "Christophe"
+  - family-names: "Majidian"
+    given-names: "Sina"
+date-released: "2025-12"
+doi: "10.1007/s00239-025-10271-7"
+url: "https://link.springer.com/article/10.1007/s00239-025-10271-7"
+preferred-citation: >-
+  Yazdizadeh Kharrazi A, Altenhoff AM, Romashchenko N, Dessimoz C, Majidian S. "OrthoXML-Tools: A Toolkit for Manipulating OrthoXML Files for Orthology Data." Journal of Molecular Evolution 2025;93(6):800. https://doi.org/10.1007/s00239-025-10271-7
