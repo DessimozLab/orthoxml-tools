@@ -16,6 +16,7 @@ Tools for working with OrthoXML files.
 - [Getting help](#getting-help)
 - [Legacy API](#legacy-api)
 - [Development and testing](#development-and-testing)
+- [Citation](#citation)
 
 ## What is OrthoXML?
 
