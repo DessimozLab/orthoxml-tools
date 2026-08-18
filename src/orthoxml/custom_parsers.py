@@ -473,9 +473,10 @@ class OrthoXMLSplitter(object):
                 if og.get("id") in hogs_to_extract
             ]
             fn = os.path.join(self.cache_dir, basename)
-            logger.info("extracting {:d} hogs into {:s}".format(len(ogs), fn))
+            logger.debug("extracting {:d} hogs into {:s}".format(len(ogs), fn))
             self.create_new_orthoxml(fn, ogs)
         else:
+            logger.info("extracting roothogs into individual files in: {:s}".format(self.cache_dir))
             for counter, og in enumerate(self._iter_toplevel_groups()):
                 if hogs_to_extract is None or og.get("id") in hogs_to_extract:
                     hog_nr = og.get("id")
@@ -484,7 +485,7 @@ class OrthoXMLSplitter(object):
                     else:
                         hog_id = "HOG{:07d}.orthoxml".format(counter)
                     fname = os.path.join(self.cache_dir, hog_id)
-                    logger.info("extracting {} into {}".format(hog_id, fname))
+                    logger.debug("extracting {} into {}".format(hog_id, fname))
                     self.create_new_orthoxml(fname, [og])
 
     def iter_generefs_in_og(self, og_node):

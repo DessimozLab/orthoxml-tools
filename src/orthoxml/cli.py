@@ -226,7 +226,7 @@ def main():
     shared_args_parser = argparse.ArgumentParser(add_help=False)
     shared_args_parser.add_argument(
         "--log",
-        default="WARNING",
+        default="INFO",
         help="Set the logging level [DEBUG | INFO | WARNING | ERROR | CRITICAL]",
     )
 
