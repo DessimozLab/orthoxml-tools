@@ -396,7 +396,7 @@ class OrthoXMLSplitter(object):
     def _assert_cache_dir(self, cache_dir):
         # Ensure existance of cache directory (py2 compat)
         try:
-            os.makedirs(cache_dir)
+            os.makedirs(cache_dir, exist_ok=True)
         except OSError as exc:
             if exc.errno == errno.EEXIST and os.path.isdir(cache_dir):
                 pass
@@ -418,7 +418,9 @@ class OrthoXMLSplitter(object):
         for node in self.Etree_root:
             if node.tag == "{http://orthoXML.org/2011/}groups":
                 for root_hog in node:
-                    yield root_hog
+                    if root_hog.tag in {"{http://orthoXML.org/2011/}orthologGroup",
+                                         "{http://orthoXML.org/2011/}paralogGroup"}:
+                        yield root_hog
 
     def __call__(
         self,
