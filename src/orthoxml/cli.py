@@ -14,9 +14,7 @@ from orthoxml.custom_parsers import (
     BasicStats,
     GenePerTaxonStats,
     PrintTaxonomy,
-    RootHOGCounter,
-    IndexNthRootHOG,
-    OutputNthRootHOG,
+    OrthoXMLSplitter,
     StreamPairsParser,
     GetGene2IdMapping,
     StreamMaxOGParser,
@@ -138,24 +136,8 @@ def handle_export_ogs(args):
                 c += 1
 
 def handle_split_streaming(args):
-    infile_name = args.infile.split("/")[-1]
-
-    with RootHOGCounter(args.infile) as counter:
-        counter.parse_through()
-        logger.info(f"Processing {counter.rhogs_count} root-level groups...")
-
-    for rhog in range(1, counter.rhogs_count + 1):
-
-        with IndexNthRootHOG(args.infile, rhog) as index:
-            index.parse_through()
-            logger.debug(f"Group {rhog} has {len(index.present_genes)} gene refs")
-
-            process_stream_orthoxml(args.infile,
-                                    os.path.join(args.outdir, f"{rhog}_{infile_name}"),
-                                    parser_cls=OutputNthRootHOG,
-                                    parser_kwargs={
-                                        "rhogs_number": rhog,
-                                        "present_genes": index.present_genes})
+    splitter = OrthoXMLSplitter(args.infile, cache_dir=args.outdir)
+    splitter()
 
 def handle_conversion_to_nhx(args):
     infile = args.infile
@@ -244,7 +226,7 @@ def main():
     shared_args_parser = argparse.ArgumentParser(add_help=False)
     shared_args_parser.add_argument(
         "--log",
-        default="WARNING",
+        default="INFO",
         help="Set the logging level [DEBUG | INFO | WARNING | ERROR | CRITICAL]",
     )
 

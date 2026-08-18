@@ -65,6 +65,10 @@ cat "$OUT_EXPORT_OGS"
 echo -e "\n[7] Test: split"
 orthoxml-tools split --infile "$MULTIPLE_RHOGS_INFILE" --outdir "tests_output/splits"
 
+echo -e "\n[7.1] Test: split file names prefer root HOG IDs when available"
+orthoxml-tools split --infile "$FILTER_INFILE" --outdir "tests_output/splits-hog-ids"
+
+
 echo -e "\n[8.1] Test: filter cascade-remove"
 orthoxml-tools filter \
     --infile "$FILTER_INFILE" \
