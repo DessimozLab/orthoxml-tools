@@ -179,12 +179,14 @@ class IndexNthRootHOG(StreamOrthoXMLParser):
         self.rhogs_number = rhogs_number
         self.present_genes = set()
         self.current_rhog = 0
+        self.rhog_id = None
 
     def process_toplevel_group(self, elem):
         self.current_rhog += 1
 
         if self.current_rhog == self.rhogs_number:
             self.present_genes = set(elem.xpath(".//ox:geneRef", namespaces={"ox": self._ns}))
+            self.rhog_id = elem.get("id")
 
         return None
 

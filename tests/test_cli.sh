@@ -65,6 +65,22 @@ cat "$OUT_EXPORT_OGS"
 echo -e "\n[7] Test: split"
 orthoxml-tools split --infile "$MULTIPLE_RHOGS_INFILE" --outdir "tests_output/splits"
 
+echo -e "\n[7.1] Test: split file names prefer root HOG IDs when available"
+mkdir -p tests_output/splits
+rm -f tests_output/splits/*.orthoxml
+orthoxml-tools split --infile "$FILTER_INFILE" --outdir "tests_output/splits"
+for file in tests_output/splits/*.orthoxml; do
+  name="${file##*/}"
+  case "$name" in
+    HOG_*_sample-for-filter.orthoxml) ;;
+    *)
+      echo "Unexpected split filename: $name"
+      exit 1
+      ;;
+  esac
+done
+ls tests_output/splits
+
 echo -e "\n[8.1] Test: filter cascade-remove"
 orthoxml-tools filter \
     --infile "$FILTER_INFILE" \
