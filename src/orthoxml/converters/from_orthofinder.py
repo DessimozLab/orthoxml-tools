@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import csv
 from lxml import etree
 from ..parsers import OrthoXMLStreamWriter

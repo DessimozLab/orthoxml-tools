@@ -1,4 +1,6 @@
 # custom_parsers.py
+from __future__ import annotations
+
 import enum
 from collections import defaultdict
 from .parsers import StreamOrthoXMLParser
