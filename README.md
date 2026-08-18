@@ -63,6 +63,9 @@ Use these commands to understand the content of an OrthoXML file before processi
 # Basic statistics
 orthoxml-tools stats --infile path/to/file.orthoxml
 
+# Validate the file against the OrthoXML Standard
+orthoxml-tools validate --infile path/to/file.orthoxml
+
 # Gene counts per taxon
 orthoxml-tools gene-stats --infile path/to/file.orthoxml --outfile gene_stats.json
 
