@@ -71,9 +71,6 @@ orthoxml-tools taxonomy --infile path/to/file.orthoxml
 
 # Write the taxonomy tree to NHX format with annotated internal nodes
 orthoxml-tools taxonomy --infile path/to/file.orthoxml --outfile species-tree.nhx
-
-# Export orthologous pairs
-orthoxml-tools export-pairs ortho --infile path/to/file.orthoxml --outfile orthos.tsv
 ```
 
 ### Export data for downstream analysis
