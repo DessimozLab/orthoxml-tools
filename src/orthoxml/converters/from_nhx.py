@@ -300,7 +300,8 @@ class OrthoXMLBuilder:
             self.xml.insert(groups_index, taxonomy_element)
 
         self.add_loft_ids()
-        ET.indent(self.xml)
+        if hasattr(ET, "indent"):
+            ET.indent(self.xml)
         self.doc.write(fh, xml_declaration=True, encoding="UTF-8", default_namespace=None)
 
     def add_loft_ids(self, id_formatter="HOG:{:08d}"):
