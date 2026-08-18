@@ -1,4 +1,5 @@
 # exporters.py
+from __future__ import annotations
 
 from .models import OrthologGroup, ParalogGroup, UnionFind, Taxon, Species
 from ..logger import logger
