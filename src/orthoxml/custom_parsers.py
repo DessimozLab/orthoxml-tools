@@ -493,8 +493,14 @@ class OrthoXMLSplitter(object):
             yield node
 
     def get_gene_via_generef(self, genesref_ids):
-        genesref_ids = set(genesref_ids)
-        return [self.gene_lookup[gene_id] for gene_id in genesref_ids]
+        # Deduplicate while preserving first-seen order from geneRef traversal.
+        seen = set()
+        ordered_gene_ids = []
+        for gene_id in genesref_ids:
+            if gene_id not in seen:
+                seen.add(gene_id)
+                ordered_gene_ids.append(gene_id)
+        return [self.gene_lookup[gene_id] for gene_id in ordered_gene_ids]
 
     def create_new_orthoxml(self, fn, OGs):
         """create a new orthoxml file for the passed orthologGroup elements.
@@ -535,7 +541,7 @@ class OrthoXMLSplitter(object):
             species_xml = etree.Element("species")
             for attr, value in species_el.items():
                 species_xml.set(attr, value)
-            etree_2_dump.insert(0, species_xml)
+            etree_2_dump.append(species_xml)
 
             for db_el in zoo[species_el].keys():
                 # Add <database> into <species>
