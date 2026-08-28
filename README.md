@@ -18,9 +18,9 @@ Tools for working with OrthoXML files.
 - [Development and testing](#development-and-testing)
 - [Citation](#citation)
 
-## What is OrthoXML?
+## What are OrthoXML and OrthoXML-tools?
 
-> OrthoXML is a standard for sharing and exchanging orthology predictions. It provides a structured way to describe orthology relationships while preserving database-specific annotations. More details are available at [OrthoXML](https://github.com/qfo/orthoxml/tree/main).
+> OrthoXML is a standard for sharing and exchanging orthology predictions. It provides a structured way to describe orthology relationships while preserving database-specific annotations. More details are available at [OrthoXML](https://github.com/qfo/orthoxml/tree/main). OrthoXML-tools provide a comprehensive toolkit for working (inspecting, manipulating, convert to/from) with OrthoXML files.
 
 ## Installation
 
