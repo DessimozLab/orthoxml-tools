@@ -220,12 +220,13 @@ orthoxml-tools find-roothog --infile file.orthoxml --genes 1000000001
 orthoxml-tools find-roothog --infile file.orthoxml --id protId --genes A0A8M1N6K4
 ```
 
-Output is a TSV with the columns `query`, `gene_id` (internal OrthoXML id), `roothog_id`, `roothog_index` (1-based position among the root groups, useful when HOGs have no `id`), `taxon_level`, and `num_genes` (distinct genes in the rootHOG, including those in nested and paralog groups).
+Output is a TSV with the columns `query`, `gene_id` (internal OrthoXML id), `roothog_id`, `taxon_level`, and `num_genes` (distinct genes in the rootHOG, including those in nested and paralog groups).
 
 Notes:
 - `taxon_level` is the rootHOG's `<property name="TaxRange">` value (OrthoXML 0.3/0.4, e.g. FastOMA output). If that is missing, it is the `taxonId` attribute (OrthoXML 0.5), shown as the taxon name from `<taxonomy>` when available.
 - Missing values are written as `NA`. Genes that are absent or not in any group produce an all-`NA` row and a warning.
-- The file is streamed in a single pass, which stops as soon as every query has been found.
+- Built for large files: rather than parsing the XML, it searches the raw bytes and only parses the rootHOGs that contain a query. It stops as soon as every query has been found. A 4 GB file is scanned in a few seconds.
+- It assumes the group tags have no namespace prefix and that no group is self-closing (`<orthologGroup/>`), which holds for standard OrthoXML output such as FastOMA's.
 
 ### export-pairs
 Export ortholog or paralog pairs as tab-separated output.

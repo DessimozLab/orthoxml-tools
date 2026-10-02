@@ -19,8 +19,8 @@ from orthoxml.custom_parsers import (
     StreamPairsParser,
     GetGene2IdMapping,
     StreamMaxOGParser,
-    FindRootHOG,
 )
+from orthoxml.roothog_lookup import RootHOGLookup
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str, subset_orthoxml
 from orthoxml.logger import get_logger, set_logger_level
 from orthoxml.utils import validate_xml
@@ -232,27 +232,20 @@ def handle_find_roothog(args):
     if not queries:
         raise SystemExit("error: find-roothog requires --genes and/or --genes-file")
 
-    with FindRootHOG(args.infile, queries, id=args.id) as parser:
-        for tag, _ in parser.parse():
-            if tag == "start_groups":
-                # header fully read: fail fast or skip the groups if nothing can match
-                if not parser.id_attr_seen:
-                    raise SystemExit(
-                        f"error: no <gene> element in '{args.infile}' has a '{args.id}' attribute; "
-                        "try a different --id"
-                    )
-                if not parser.target2query:
-                    break
-            if parser.done:
-                break
-        rows_by_query = defaultdict(list)
-        for row in parser.results:
-            rows_by_query[row["query"]].append(row)
+    lookup = RootHOGLookup(args.infile, queries, id=args.id).run()
+    if not lookup.id_attr_seen:
+        raise SystemExit(
+            f"error: no <gene> element in '{args.infile}' has a '{args.id}' attribute; "
+            "try a different --id"
+        )
+    rows_by_query = defaultdict(list)
+    for row in lookup.results:
+        rows_by_query[row["query"]].append(row)
 
     def fmt(value):
         return "NA" if value is None else str(value)
 
-    columns = ["query", "gene_id", "roothog_id", "roothog_index", "taxon_level", "num_genes"]
+    columns = ["query", "gene_id", "roothog_id", "taxon_level", "num_genes"]
     lines = ["\t".join(columns)]
     not_found = []
     for q in dict.fromkeys(queries):
