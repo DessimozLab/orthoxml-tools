@@ -69,6 +69,9 @@ orthoxml-tools validate --infile path/to/file.orthoxml
 # Gene counts per taxon
 orthoxml-tools gene-stats --infile path/to/file.orthoxml --outfile gene_stats.json
 
+# Find the rootHOG (id, taxonomic level, size) containing given genes
+orthoxml-tools find-roothog --infile path/to/file.orthoxml --id protId --genes P12345 Q67890
+
 # Show the taxonomy tree in a human-readable format
 orthoxml-tools taxonomy --infile path/to/file.orthoxml
 
@@ -191,6 +194,38 @@ orthoxml-tools taxonomy --infile path/to/file.orthoxml
 Options:
 - `--infile <file>`: Input OrthoXML file (required).
 - `--outfile <file>`: When provided, write the taxonomy tree to this file in NHX format with internal nodes annotated.
+
+### find-roothog
+Find the rootHOG that contains each of the given genes and report its ID, taxonomic level and size.
+
+```bash
+orthoxml-tools find-roothog --infile path/to/file.orthoxml \
+  [--genes GENE [GENE ...]] \
+  [--genes-file FILE] \
+  [--id <id|protId|geneId>] \
+  [--outfile <file>]
+```
+
+Options:
+- `--infile <file>`: Input OrthoXML file (required).
+- `--genes <id> [<id> ...]`: One or more gene identifiers to look up.
+- `--genes-file <file>`: Plain-text file with one gene identifier per line.
+- `--id <tag>`: The `<gene>` attribute the identifiers refer to: the internal OrthoXML `id` (default), or `protId` / `geneId` if the file has them. The command stops with an error if no gene in the file has the chosen attribute.
+- `--outfile <file>`: Write the result to this file instead of stdout.
+
+For example, given `<gene id="1000000001" protId="A0A8M1N6K4"/>`:
+
+```bash
+orthoxml-tools find-roothog --infile file.orthoxml --genes 1000000001
+orthoxml-tools find-roothog --infile file.orthoxml --id protId --genes A0A8M1N6K4
+```
+
+Output is a TSV with the columns `query`, `gene_id` (internal OrthoXML id), `roothog_id`, `roothog_index` (1-based position among the root groups, useful when HOGs have no `id`), `taxon_level`, and `num_genes` (distinct genes in the rootHOG, including those in nested and paralog groups).
+
+Notes:
+- `taxon_level` is the rootHOG's `<property name="TaxRange">` value (OrthoXML 0.3/0.4, e.g. FastOMA output). If that is missing, it is the `taxonId` attribute (OrthoXML 0.5), shown as the taxon name from `<taxonomy>` when available.
+- Missing values are written as `NA`. Genes that are absent or not in any group produce an all-`NA` row and a warning.
+- The file is streamed in a single pass, which stops as soon as every query has been found.
 
 ### export-pairs
 Export ortholog or paralog pairs as tab-separated output.

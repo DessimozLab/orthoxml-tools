@@ -4,6 +4,7 @@ import os
 import io
 import argparse
 import json
+from collections import defaultdict
 from lxml import etree
 from orthoxml import __version__
 from orthoxml.parsers import process_stream_orthoxml
@@ -18,6 +19,7 @@ from orthoxml.custom_parsers import (
     StreamPairsParser,
     GetGene2IdMapping,
     StreamMaxOGParser,
+    FindRootHOG,
 )
 from orthoxml.streamfilters import filter_hogs, FilterStrategy, enum_to_str, subset_orthoxml
 from orthoxml.logger import get_logger, set_logger_level
@@ -219,6 +221,56 @@ def handle_subset(args):
         species_names=species_names if species_names else None,
         hog_ids=hog_ids if hog_ids else None,
     )
+
+
+def handle_find_roothog(args):
+    queries = list(args.genes) if args.genes else []
+    if args.genes_file:
+        with open(args.genes_file) as fh:
+            queries += [line.strip() for line in fh if line.strip()]
+
+    if not queries:
+        raise SystemExit("error: find-roothog requires --genes and/or --genes-file")
+
+    with FindRootHOG(args.infile, queries, id=args.id) as parser:
+        for tag, _ in parser.parse():
+            if tag == "start_groups":
+                # header fully read: fail fast or skip the groups if nothing can match
+                if not parser.id_attr_seen:
+                    raise SystemExit(
+                        f"error: no <gene> element in '{args.infile}' has a '{args.id}' attribute; "
+                        "try a different --id"
+                    )
+                if not parser.target2query:
+                    break
+            if parser.done:
+                break
+        rows_by_query = defaultdict(list)
+        for row in parser.results:
+            rows_by_query[row["query"]].append(row)
+
+    def fmt(value):
+        return "NA" if value is None else str(value)
+
+    columns = ["query", "gene_id", "roothog_id", "roothog_index", "taxon_level", "num_genes"]
+    lines = ["\t".join(columns)]
+    not_found = []
+    for q in dict.fromkeys(queries):
+        if q not in rows_by_query:
+            not_found.append(q)
+            lines.append("\t".join([q] + ["NA"] * (len(columns) - 1)))
+        for row in rows_by_query[q]:
+            lines.append("\t".join(fmt(row[c]) for c in columns))
+
+    if not_found:
+        logger.warning(f"{len(not_found)} gene(s) not found in any rootHOG: {', '.join(not_found)}")
+
+    if args.outfile:
+        with open(args.outfile, "w", encoding="utf-8") as out:
+            out.write("\n".join(lines) + "\n")
+        print(f"rootHOG lookup written to {args.outfile}")
+    else:
+        print("\n".join(lines))
 
 
 def main():
@@ -433,6 +485,37 @@ def main():
         help="File with one HOG ID per line",
     )
     subset_parser.set_defaults(func=handle_subset)
+
+    # Find rootHOG subcommand
+    find_rhog_parser = subparsers.add_parser(
+        "find-roothog",
+        parents=[shared_args_parser],
+        help="Find the rootHOG (id, taxonomic level, size) containing the given genes",
+    )
+    find_rhog_parser.add_argument("--infile", required=True, help="Path to the OrthoXML file")
+    find_rhog_parser.add_argument(
+        "--genes",
+        nargs="+",
+        metavar="GENE",
+        help="One or more gene identifiers to look up",
+    )
+    find_rhog_parser.add_argument(
+        "--genes-file",
+        metavar="FILE",
+        help="File with one gene identifier per line",
+    )
+    find_rhog_parser.add_argument(
+        "--id",
+        default="id",
+        choices=["id", "protId", "geneId"],
+        help="The <gene> attribute the identifiers refer to: the internal OrthoXML 'id' (default), "
+             "or 'protId' / 'geneId' if present in the file",
+    )
+    find_rhog_parser.add_argument(
+        "--outfile",
+        help="If provided, write the TSV result to this file; otherwise, print to stdout",
+    )
+    find_rhog_parser.set_defaults(func=handle_find_roothog)
 
     args = parser.parse_args()
     set_logger_level(args.log)

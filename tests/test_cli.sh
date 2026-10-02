@@ -155,5 +155,12 @@ orthoxml-tools -v
 echo -e "\n[15] Test: validation"
 orthoxml-tools validate --infile "$VALIDATE_INFILE"
 
+echo -e "\n[16] Test: find-roothog by protId (one missing)"
+orthoxml-tools find-roothog --infile "$SUBSET_INFILE" --id protId --genes P00001 C00002 NOT_A_GENE
+
+echo -e "\n[16.1] Test: find-roothog by internal id with --outfile"
+orthoxml-tools find-roothog --infile "$MULTIPLE_RHOGS_INFILE" --genes 1 8 --outfile "$OUT_DIR/roothogs.tsv"
+cat "$OUT_DIR/roothogs.tsv"
+
 echo -e "\n"
 echo -e "\\033[32mAll tests completed successfully.\\033[0m"

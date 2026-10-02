@@ -43,6 +43,7 @@ def auto_open(fn, *args, **kwargs):
     if isinstance(fn, BytesIO):
         return fn
 
+    fn = os.fspath(fn)
     if os.path.isfile(fn) and os.stat(fn).st_size > 0:
         with open(fn, 'rb') as fp:
             fs = fp.read(max([len(x) for x in fmagic]))
