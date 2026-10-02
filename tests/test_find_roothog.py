@@ -1,6 +1,10 @@
+import gzip
 from pathlib import Path
 
-from orthoxml.custom_parsers import FindRootHOG
+import pytest
+
+from orthoxml import roothog_lookup
+from orthoxml.roothog_lookup import RootHOGLookup
 
 EXAMPLES = Path(__file__).parent.parent / "examples" / "data"
 FASTOMA = Path(__file__).parent / "test-data" / "fastoma-0.3-roothogs.orthoxml"
@@ -8,18 +12,15 @@ SUBSET = Path(__file__).parent / "test-data" / "sample-for-subset.orthoxml"
 MULTI_RHOGS = EXAMPLES / "ex4-int-taxon-multiple-rhogs.orthoxml"
 
 
-def find(path, queries, id="id"):
-    with FindRootHOG(path, queries, id=id) as parser:
-        parser.parse_through()
-    return parser, {r["query"]: r for r in parser.results}
+def find(path, queries, id="id", **kwargs):
+    lookup = RootHOGLookup(path, queries, id=id, **kwargs).run()
+    return lookup, {r["query"]: r for r in lookup.results}
 
 
 def test_default_query_is_internal_id():
     _, res = find(FASTOMA, ["1018005004", "1000000001"])
     assert res["1018005004"]["roothog_id"] == "HOG_D0637107_sub13680"
-    assert res["1018005004"]["roothog_index"] == 1
     assert res["1000000001"]["roothog_id"] == "HOG_D0655833_sub10556"
-    assert res["1000000001"]["roothog_index"] == 2
 
 
 def test_protid_only_matched_when_requested():
@@ -42,9 +43,9 @@ def test_num_genes_counts_nested_and_paralog_genes():
 
 
 def test_missing_attribute_detected():
-    parser, res = find(FASTOMA, ["A0A8M1N6K4"], id="geneId")
+    lookup, res = find(FASTOMA, ["A0A8M1N6K4"], id="geneId")
     assert res == {}
-    assert not parser.id_attr_seen
+    assert not lookup.id_attr_seen
 
 
 def test_missing_query_is_not_reported():
@@ -59,14 +60,28 @@ def test_taxonid_resolved_through_taxonomy():
     assert res["1"]["roothog_id"] is None
     assert res["1"]["taxon_level"] == "Root"
     assert res["1"]["num_genes"] == 6
-    assert res["8"]["roothog_index"] == 2
     assert res["8"]["num_genes"] == 2
 
 
-def test_done_after_all_found():
-    with FindRootHOG(MULTI_RHOGS, ["1"]) as parser:
-        for _ in parser.parse():
-            if parser.done:
-                break
-    assert parser.done
-    assert parser.rhog_index == 1
+@pytest.mark.parametrize("chunk_size", [7, 64, 512])
+def test_tiny_chunks_give_same_result(chunk_size):
+    queries = ["1000000002", "1030000384", "1018005005", "1000000001"]
+    _, expected = find(FASTOMA, queries)
+    _, res = find(FASTOMA, queries, chunk_size=chunk_size)
+    assert res == expected
+    assert len(res) == 4
+
+
+def test_many_queries_regex_path(monkeypatch):
+    monkeypatch.setattr(roothog_lookup, "_FIND_THRESHOLD", 0)
+    _, res = find(FASTOMA, ["P12345", "Q22222", "NOPE"], id="protId")
+    assert res["P12345"]["roothog_id"] == "HOG_D0637107_sub13680"
+    assert res["Q22222"]["roothog_id"] == "HOG_D0655833_sub10556"
+    assert "NOPE" not in res
+
+
+def test_gzipped_input(tmp_path):
+    gz = tmp_path / "fastoma.orthoxml.gz"
+    gz.write_bytes(gzip.compress(FASTOMA.read_bytes()))
+    _, res = find(gz, ["P12345"], id="protId")
+    assert res["P12345"]["taxon_level"] == "Euteleostomi"
