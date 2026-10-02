@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<orthoXML xmlns="http://orthoXML.org/2011/" origin="OMA" originVersion="Nov 2021" version="0.3">
+   <species name="DANRE" NCBITaxId="1">
+      <database name="database " version="2023">
+         <genes>
+            <gene id="1000000001" protId="A0A8M1N6K4"/>
+            <gene id="1000000002" protId="A0A8M1N773"/>
+         </genes>
+      </database>
+   </species>
+   <species name="HUMAN" NCBITaxId="2">
+      <database name="database " version="2023">
+         <genes>
+            <gene id="1018005004" protId="P12345"/>
+            <gene id="1018005005" protId="P67890"/>
+         </genes>
+      </database>
+   </species>
+   <species name="MOUSE" NCBITaxId="3">
+      <database name="database " version="2023">
+         <genes>
+            <gene id="1030000384" protId="Q11111"/>
+            <gene id="1030000385" protId="Q22222"/>
+         </genes>
+      </database>
+   </species>
+   <groups>
+      <orthologGroup id="HOG_D0637107_sub13680">
+         <score id="CompletenessScore" value="1.0"/>
+         <property name="TaxRange" value="Euteleostomi"/>
+         <geneRef id="1000000002"/>
+         <orthologGroup id="HOG_D0637107_sub13664">
+            <score id="CompletenessScore" value="1.0"/>
+            <property name="TaxRange" value="Euarchontoglires"/>
+            <geneRef id="1018005004"/>
+            <geneRef id="1030000384"/>
+         </orthologGroup>
+      </orthologGroup>
+      <orthologGroup id="HOG_D0655833_sub10556">
+         <score id="CompletenessScore" value="1.0"/>
+         <property name="TaxRange" value="Chordata"/>
+         <geneRef id="1000000001"/>
+         <paralogGroup>
+            <geneRef id="1018005005"/>
+            <geneRef id="1030000385"/>
+         </paralogGroup>
+      </orthologGroup>
+   </groups>
+</orthoXML>
